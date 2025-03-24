@@ -1,153 +1,139 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, ScrollView } from 'react-native';
-import { GLOBAL_STYLES, COLORS, FONTS } from '../styles/styles';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from "react-native";
+import axios from "axios";
+
+const API_URL = "http://192.168.1.67:8080/api/cliente"; // Reemplaza con la IP de tu backend
 
 const RegisterClient = () => {
-  const [form, setForm] = useState({
-    nombreCompleto: '',
-    email: '',
-    telefono: '',
-    telefonoAdicional: '',
-    fechaAfiliacion: '',
-    calle: '',
-    numeroDomicilio: '',
+  const [client, setClient] = useState({
+    nombre: "",
+    apellidoPaterno: "",
+    apellidoMaterno: "",
+    correo: "",
+    telefono: "",
+    telefonoAdicional: "",
+    direccion: {
+      calle: "",
+      numero: "",
+      colonia: "",
+      ciudad: "",
+      estado: "",
+      codigoPostal: "",
+    },
   });
 
   const handleChange = (name, value) => {
-    setForm({ ...form, [name]: value });
+    setClient({ ...client, [name]: value });
   };
 
-  const handleRegister = () => {
-    console.log("Cliente Registrado:", form);
+  const handleDireccionChange = (name, value) => {
+    setClient({
+      ...client,
+      direccion: { ...client.direccion, [name]: value },
+    });
+  };
+
+  const handleSubmit = async () => {
+    const clienteData = {
+      nombre: client.nombre,
+      apellidoPaterno: client.apellidoPaterno,
+      apellidoMaterno: client.apellidoMaterno,
+      correo: client.correo,
+      telefono: [client.telefono, client.telefonoAdicional].filter(Boolean),
+      direccion: client.direccion,
+    };
+
+    try {
+      const response = await axios.post(API_URL, clienteData);
+      Alert.alert("Éxito", "Cliente registrado correctamente");
+      console.log("Cliente registrado:", response.data);
+    } catch (error) {
+      console.error("Error al registrar cliente:", error.response?.data || error.message);
+      Alert.alert("Error", "No se pudo registrar el cliente");
+    }
   };
 
   return (
-    <ImageBackground source={require('../../assets/favicon.png')} style={styles.background}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Registro de Cliente</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Registro de Cliente</Text>
 
-          <View style={GLOBAL_STYLES.line} />
+        {/* Nombre y Apellidos */}
+        <TextInput placeholder="Nombre" value={client.nombre} onChangeText={(text) => handleChange("nombre", text)} style={styles.input} />
+        <TextInput placeholder="Apellido Paterno" value={client.apellidoPaterno} onChangeText={(text) => handleChange("apellidoPaterno", text)} style={styles.input} />
+        <TextInput placeholder="Apellido Materno" value={client.apellidoMaterno} onChangeText={(text) => handleChange("apellidoMaterno", text)} style={styles.input} />
 
-          <TextInput
-            placeholder="Nombre Completo"
-            placeholderTextColor="#333"
-            value={form.nombreCompleto}
-            onChangeText={(text) => handleChange('nombreCompleto', text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor="#333"
-            keyboardType="email-address"
-            value={form.email}
-            onChangeText={(text) => handleChange('email', text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Teléfono"
-            placeholderTextColor="#333"
-            keyboardType="phone-pad"
-            value={form.telefono}
-            onChangeText={(text) => handleChange('telefono', text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Teléfono adicional"
-            placeholderTextColor="#333"
-            keyboardType="phone-pad"
-            value={form.telefonoAdicional}
-            onChangeText={(text) => handleChange('telefonoAdicional', text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Fecha de afiliación"
-            placeholderTextColor="#333"
-            value={form.fechaAfiliacion}
-            onChangeText={(text) => handleChange('fechaAfiliacion', text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Calle"
-            placeholderTextColor="#333"
-            value={form.calle}
-            onChangeText={(text) => handleChange('calle', text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Número de domicilio"
-            placeholderTextColor="#333"
-            keyboardType="numeric"
-            value={form.numeroDomicilio}
-            onChangeText={(text) => handleChange('numeroDomicilio', text)}
-            style={styles.input}
-          />
+        {/* Correo */}
+        <TextInput placeholder="Correo" value={client.correo} onChangeText={(text) => handleChange("correo", text)} style={styles.input} keyboardType="email-address" />
 
-          <TouchableOpacity style={styles.button} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Registrar</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </ImageBackground>
+        {/* Teléfonos */}
+        <TextInput placeholder="Teléfono" value={client.telefono} onChangeText={(text) => handleChange("telefono", text)} style={styles.input} keyboardType="phone-pad" />
+        <TextInput placeholder="Teléfono Adicional" value={client.telefonoAdicional} onChangeText={(text) => handleChange("telefonoAdicional", text)} style={styles.input} keyboardType="phone-pad" />
+
+        {/* Dirección */}
+        <Text style={styles.label}>Dirección</Text>
+        <TextInput placeholder="Calle" value={client.direccion.calle} onChangeText={(text) => handleDireccionChange("calle", text)} style={styles.input} />
+        <TextInput placeholder="Número" value={client.direccion.numero} onChangeText={(text) => handleDireccionChange("numero", text)} style={styles.input} keyboardType="numeric" />
+        <TextInput placeholder="Colonia" value={client.direccion.colonia} onChangeText={(text) => handleDireccionChange("colonia", text)} style={styles.input} />
+        <TextInput placeholder="Ciudad" value={client.direccion.ciudad} onChangeText={(text) => handleDireccionChange("ciudad", text)} style={styles.input} />
+        <TextInput placeholder="Estado" value={client.direccion.estado} onChangeText={(text) => handleDireccionChange("estado", text)} style={styles.input} />
+        <TextInput placeholder="Código Postal" value={client.direccion.codigoPostal} onChangeText={(text) => handleDireccionChange("codigoPostal", text)} style={styles.input} keyboardType="numeric" />
+
+        {/* Botón de registro */}
+        <TouchableOpacity style={styles.registerButton} onPress={handleSubmit}>
+          <Text style={styles.registerButtonText}>Registrar</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
+// 📌 Estilos del formulario
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
+  scrollContainer: {
+    flexGrow: 1,
+    paddingVertical: 20,
   },
   container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
-  },
-  formContainer: {
-    width: '95%',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Transparencia en el fondo
-    padding: 25,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginHorizontal: 10,
+    elevation: 3,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#6C2373',
-    marginBottom: 10,
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 15,
+    color: "#6C2373",
   },
-  divider: {
-    height: 2,
-    backgroundColor: '#6C2373',
-    width: '50%',
-    alignSelf: 'center',
-    marginBottom: 20,
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6C2373",
+    marginBottom: 5,
+    marginLeft: 10,
   },
   input: {
-    width: '100%',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    borderWidth: 2,
+    borderColor: "#6C2373",
     borderRadius: 10,
-    backgroundColor: 'white',
-    marginBottom: 12,
-    fontSize: 16,
+    padding: 10,
+    marginBottom: 15,
+    backgroundColor: "#F8F3F8",
   },
-  button: {
-    marginTop: 10,
-    backgroundColor: '#6C2373',
-    paddingVertical: 14,
+  registerButton: {
+    marginTop: 15,
+    backgroundColor: "#6C2373",
+    paddingVertical: 12,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  buttonText: {
-    color: 'white',
+  registerButtonText: {
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
