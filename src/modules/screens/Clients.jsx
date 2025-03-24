@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import { COLORS } from "../../styles/styles";
 import Icon from "react-native-vector-icons/Ionicons";
+import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 
 const API_URL = "http://192.168.1.67:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const Client = () => {
   const navigation = useNavigation();
   const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // 📌 Estado de carga
 
   const fetchClients = async () => {
     try {
+      setIsLoading(true); // 📌 Activa el estado de carga
       const response = await axios.get(API_URL);
       const clientes = response.data.body?.data || [];
       setClients(clientes);
@@ -21,7 +23,7 @@ const Client = () => {
       console.error("Error al obtener clientes:", error);
       Alert.alert("Error", "No se pudieron cargar los clientes");
     } finally {
-      setLoading(false);
+      setIsLoading(false); // 📌 Desactiva el estado de carga cuando termine
     }
   };
 
@@ -31,6 +33,9 @@ const Client = () => {
 
   return (
     <View style={styles.container}>
+      {/* 📌 Animación de carga mientras se obtienen los datos */}
+      <StatusBar isLoading={isLoading} />
+
       <Text style={styles.title}>Gestión de Clientes</Text>
       
       {/* Botón para registrar nuevo cliente */}
@@ -38,7 +43,7 @@ const Client = () => {
         <Text style={styles.registerText}>Registrar</Text>
       </TouchableOpacity>
 
-      {/* 📌 Encabezados de la tabla (sin fecha) */}
+      {/* 📌 Encabezados de la tabla */}
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Nombre</Text>
         <Text style={styles.headerText}>Email</Text>
@@ -46,10 +51,8 @@ const Client = () => {
         <Text style={styles.headerText}>Acciones</Text>
       </View>
 
-      {/* 📌 Mostrar indicador de carga mientras se obtienen los datos */}
-      {loading ? (
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      ) : (
+      {/* 📌 Mostrar clientes solo cuando la carga haya terminado */}
+      {!isLoading && (
         <FlatList
           data={clients}
           keyExtractor={(item) => item.id}
