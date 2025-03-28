@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { GLOBAL_STYLES, COLORS, FONTS } from '../../styles/styles';
 
 const LoginScreen = () => {
   return (
     <ImageBackground 
-      source={require('../../../assets/favicon.png')} 
+      source={require('../../../assets/imagenlogin.png')} 
       style={GLOBAL_STYLES.background}
     >
       <View style={GLOBAL_STYLES.overlay}>
+        <Image source={require('../../../assets/image.png')} style={{width:130, height:130, alignSelf:'center'}} />
         <Text style={[FONTS.title, { textAlign: 'center' }]}>Iniciar Sesión</Text>
         <View style={GLOBAL_STYLES.line} />
 
@@ -28,14 +29,10 @@ const LoginScreen = () => {
         <TouchableOpacity style={GLOBAL_STYLES.button}>
           <Text style={GLOBAL_STYLES.buttonText}>Iniciar</Text>
         </TouchableOpacity>
-
-        <Text style={GLOBAL_STYLES.forgotText}>¿Olvidaste tu contraseña? </Text>
-        <TouchableOpacity>
-          <Text style={GLOBAL_STYLES.recoverText}>Recuperar</Text>
-        </TouchableOpacity>
-
       </View>
+      
     </ImageBackground>
+
   );
 };
 

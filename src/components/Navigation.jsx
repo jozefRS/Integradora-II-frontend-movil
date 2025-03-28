@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CatalogScreen from '../modules/screens/Catalog';
-import ProductDetailScreen from '../components/ProductDetail';
+import ProductDetailScreen from '../components/catalog/ProductDetail';
 import HomeScreen from '../modules/auth/LoginScreen';
 import SalesTableScreen from '../modules/screens/Sales';
 import SalesDetailScreen from '../components/SaleDetail';

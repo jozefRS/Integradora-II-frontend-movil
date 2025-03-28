@@ -29,7 +29,7 @@ export const FONTS = {
 export const GLOBAL_STYLES = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 10,
     backgroundColor: COLORS.white,
   },
   button: {
@@ -58,6 +58,7 @@ export const GLOBAL_STYLES = StyleSheet.create({
   overlay: {
     backgroundColor: 'rgba(255, 255, 255, 0.85)', // Fondo semitransparente
     width: '90%',
+    height: '70%',
     margin:20,
     padding: 20,
     borderRadius: 15,
@@ -80,5 +81,10 @@ export const GLOBAL_STYLES = StyleSheet.create({
     textAlign: 'center',
     color: '#007BFF',
     textDecorationLine: 'underline',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

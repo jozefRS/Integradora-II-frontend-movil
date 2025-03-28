@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { COLORS } from '../styles/styles';
+import { COLORS } from '../../styles/styles';
 import { useNavigation } from '@react-navigation/native';
 
 const Product = ({ product }) => {

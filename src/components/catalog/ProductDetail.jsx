@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import { COLORS , GLOBAL_STYLES} from '../styles/styles';
+import { COLORS , GLOBAL_STYLES} from '../../styles/styles';
 
 const ProductDetail = () => {
   const route = useRoute();
@@ -42,14 +42,14 @@ const ProductDetail = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: COLORS.white,
     alignItems: 'center',
   },
   card: {
     backgroundColor: COLORS.white,
     width: '90%',
     borderRadius: 15,
-    padding: 20,
+    padding: 15,
     alignItems: 'center',
     marginTop: 20,
     shadowColor: '#000',
@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 250,
-    resizeMode: 'contain',
+    height: "50%",
+    borderRadius: 15,
   },
   infoContainer: {
     width: '100%',
