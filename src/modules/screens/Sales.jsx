@@ -1,42 +1,87 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
 import Icon from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
 
-const salesData = [
-  { 
-    id: '1', client: 'Karol Ramirez', paymentType: 'Tarjeta', deliveryType: 'Físico', total: '$2300',
-    products: [
-      { id: '101', name: 'Producto 1', price: '$500', quantity: 2, total: '$1000' },
-      { id: '102', name: 'Producto 2', price: '$78', quantity: 5, total: '$390' },
-    ]
-  },
-  { 
-    id: '2', client: 'Uziel Degante', paymentType: 'Efectivo', deliveryType: 'Domicilio', total: '$2800',
-    products: [
-      { id: '103', name: 'Producto 3', price: '$56', quantity: 3, total: '$168' },
-      { id: '104', name: 'Producto 4', price: '$100', quantity: 4, total: '$400' },
-    ]
-  }
-];
+const URL_BASE = 'http://192.168.1.67:8080/api';
 
 const Sales = () => {
   const navigation = useNavigation();
+  const [salesData, setSalesData] = useState([]);
+
+  useEffect(() => {
+    fetchSalesData();
+  }, []);
+
+  const fetchSalesData = async () => {
+    try {
+      const [salesRes, clientsRes, productsRes] = await Promise.all([
+        axios.get(`${URL_BASE}/ventas`),
+        axios.get(`${URL_BASE}/cliente`),
+        axios.get(`${URL_BASE}/producto`)
+      ]);
+
+      const sales = salesRes.data.body?.data || [];
+      const clients = clientsRes.data.body?.data || [];
+      const products = productsRes.data.body?.data || [];
+
+      const enrichedSales = sales.map(sale => {
+        const client = clients.find(c => c.id === sale.idCliente);
+        const clientName = client
+          ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno || ''}`.trim()
+          : 'Cliente desconocido';
+
+        const saleProducts = Object.entries(sale.productos).map(([productId, quantity]) => {
+          console.log('🧩 Buscando producto con ID:', productId);
+          const product = products.find(p => p.id === productId);
+
+          if (!product) {
+            console.warn(`❌ Producto con ID ${productId} no encontrado en la lista de productos`);
+            return {
+              id: productId,
+              name: 'Producto no disponible',
+              price: '$0.00',
+              quantity,
+              total: '$0.00'
+            };
+          }
+
+          const unitPrice = parseFloat(product.precio);
+          return {
+            id: productId,
+            name: product.nombre,
+            price: `$${unitPrice.toFixed(2)}`,
+            quantity,
+            total: `$${(unitPrice * quantity).toFixed(2)}`
+          };
+        });
+
+        return {
+          ...sale,
+          clientName,
+          products: saleProducts
+        };
+      });
+
+      setSalesData(enrichedSales);
+    } catch (error) {
+      console.error("Error al cargar ventas, clientes o productos", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Gestión de Ventas</Text>
       <View style={GLOBAL_STYLES.line} />
 
-      {/* Botón para ir a Registrar Venta */}
-      <TouchableOpacity 
-  style={styles.registerButton} 
-  onPress={() => navigation.navigate('RegisterSale')} // Ahora está correctamente definido en el Stack
->
-  <Text style={styles.registerButtonText}>Registrar Venta</Text>
-</TouchableOpacity>
-
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={() => navigation.navigate('RegisterSale')}
+      >
+        <Text style={styles.registerButtonText}>Registrar Venta</Text>
+      </TouchableOpacity>
 
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Cliente</Text>
@@ -51,13 +96,13 @@ const Sales = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.row}>
-            <Text style={styles.cell}>{item.client}</Text>
-            <Text style={styles.cell}>{item.paymentType}</Text>
-            <Text style={styles.cell}>{item.deliveryType}</Text>
-            <Text style={styles.cell}>{item.total}</Text>
-            <TouchableOpacity 
-                style={styles.iconButton} 
-                onPress={() => navigation.navigate('SalesDetail', { sale: item })}
+            <Text style={styles.cell}>{item.clientName}</Text>
+            <Text style={styles.cell}>{item.tipoDePago}</Text>
+            <Text style={styles.cell}>{item.tipoDeEntrega}</Text>
+            <Text style={styles.cell}>${item.total.toFixed(2)}</Text>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => navigation.navigate('SalesDetail', { sale: item })}
             >
               <Icon name="eye-outline" size={20} color={COLORS.black} />
             </TouchableOpacity>

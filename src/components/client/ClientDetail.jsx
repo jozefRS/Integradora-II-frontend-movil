@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import { COLORS } from "../styles/styles";
+import { COLORS } from "../../styles/styles";
 
 export default function ClientDetail() {
   const route = useRoute();
   const { client } = route.params; // 📌 Obtener datos del cliente desde la navegación
+  const direccion = client.direccion || {};
 
   return (
     <View style={styles.container}>
@@ -38,22 +39,22 @@ export default function ClientDetail() {
         {/* 📌 Dirección desglosada */}
         <Text style={styles.sectionTitle}>Dirección</Text>
         <Text style={styles.info}>
-          <Text style={styles.label}>Calle: </Text> {client.direccion.calle.trim()}
+          <Text style={styles.label}>Calle: </Text> {direccion.calle?.trim() || 'No disponible'}
         </Text>
         <Text style={styles.info}>
-          <Text style={styles.label}>Número: </Text> {client.direccion.numero.trim()}
+          <Text style={styles.label}>Número: </Text> {direccion.numero?.trim() || 'No disponible'}
         </Text>
         <Text style={styles.info}>
-          <Text style={styles.label}>Colonia: </Text> {client.direccion.colonia.trim()}
+          <Text style={styles.label}>Colonia: </Text> {direccion.colonia?.trim() || 'No disponible'}
         </Text>
         <Text style={styles.info}>
-          <Text style={styles.label}>Ciudad: </Text> {client.direccion.ciudad.trim()}
+          <Text style={styles.label}>Ciudad: </Text> {direccion.ciudad?.trim() || 'No disponible'}
         </Text>
         <Text style={styles.info}>
-          <Text style={styles.label}>Estado: </Text> {client.direccion.estado.trim()}
+          <Text style={styles.label}>Estado: </Text> {direccion.estado?.trim() || 'No disponible'}
         </Text>
         <Text style={styles.info}>
-          <Text style={styles.label}>Código Postal: </Text> {client.direccion.codigoPostal.trim()}
+          <Text style={styles.label}>Código Postal: </Text> {direccion.codigoPostal?.trim() || 'No disponible'}
         </Text>
 
         {/* 📌 Línea divisoria */}
@@ -68,7 +69,7 @@ export default function ClientDetail() {
   );
 }
 
-// 📌 Estilos mejorados con más espacio y alineación correcta
+// 📌 Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -80,8 +81,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 15,
-    padding: 25, // Más espacio interno
-    width: "95%", // Mayor ancho
+    padding: 25,
+    width: "95%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

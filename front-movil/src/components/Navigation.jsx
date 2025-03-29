@@ -3,27 +3,18 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { COLORS } from '../styles/styles';
-
-// vista de auth
-import HomeScreen from '../modules/auth/LoginScreen';
-
-// vistas de catalogo
 import CatalogScreen from '../modules/screens/Catalog';
-import ProductDetailScreen from '../components/catalog/ProductDetail';
-
-// vistas de ventas
+import ProductDetailScreen from '../components/ProductDetail';
+import HomeScreen from '../modules/auth/LoginScreen';
 import SalesTableScreen from '../modules/screens/Sales';
-import RegisterSale from './sales/RegisterSale';
-import SalesDetailScreen from './sales/SaleDetail';
-
+import SalesDetailScreen from '../components/SaleDetail';
 //import EditClientScreen from '../screens/EditClient';
-
-// vistas de cliente
+import { COLORS } from '../styles/styles';
 import Client from '../modules/screens/Clients';
-import ClientDetail from './client/ClientDetail';
-import RegisterClient from './client/RegisterClient';
-import EditClient from './client/EditClient';
+import ClientDetail from '../components/ClientDetail';
+import RegisterClient from '../components/RegisterClient';
+import RegisterSale from './RegisterSale';
+import EditClient from './EditClient';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

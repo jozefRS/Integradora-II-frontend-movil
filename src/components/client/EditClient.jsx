@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import axios from "axios";
-import ConfirmationModal from "./status/ConfirmationModal";
-import LoadingModal from "./status/LoadingModal";
-import AlertModal from "./status/AlertModal";
+import { useRoute } from "@react-navigation/native";
+import ConfirmationModal from "../status/ConfirmationModal";
+import LoadingModal from "../status/LoadingModal";
+import AlertModal from "../status/AlertModal";
 
-const API_URL = "http://192.168.109.186:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
+const EditClient = () => {
+  const route = useRoute();
+  const { client: existingClient } = route.params;
 
-const RegisterClient = () => {
   const [client, setClient] = useState({
     nombre: "",
     apellidoPaterno: "",
@@ -25,13 +26,33 @@ const RegisterClient = () => {
     },
   });
 
-  const [isModalVisible, setModalVisible] = useState(false); // 📌 Estado del modal de confirmación
-  const [isLoading, setIsLoading] = useState(false); // 📌 Estado del modal de carga
-
-  // 📌 Se agregaron estos estados para la alerta de éxito/error
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
+
+  // 📌 Precargar datos del cliente
+  useEffect(() => {
+    if (existingClient) {
+      setClient({
+        nombre: existingClient.nombre || "",
+        apellidoPaterno: existingClient.apellidoPaterno || "",
+        apellidoMaterno: existingClient.apellidoMaterno || "",
+        correo: existingClient.correo || "",
+        telefono: existingClient.telefono?.[0] || "",
+        telefonoAdicional: existingClient.telefono?.[1] || "",
+        direccion: {
+          calle: existingClient.direccion?.calle || "",
+          numero: existingClient.direccion?.numero || "",
+          colonia: existingClient.direccion?.colonia || "",
+          ciudad: existingClient.direccion?.ciudad || "",
+          estado: existingClient.direccion?.estado || "",
+          codigoPostal: existingClient.direccion?.codigoPostal || "",
+        },
+      });
+    }
+  }, [existingClient]);
 
   const handleChange = (name, value) => {
     setClient({ ...client, [name]: value });
@@ -46,39 +67,22 @@ const RegisterClient = () => {
 
   const handleConfirm = async () => {
     setModalVisible(false);
-    setIsLoading(true); // 📌 Muestra el estado de carga
+    setIsLoading(true);
 
-    const clienteData = {
-      nombre: client.nombre,
-      apellidoPaterno: client.apellidoPaterno,
-      apellidoMaterno: client.apellidoMaterno,
-      correo: client.correo,
-      telefono: [client.telefono, client.telefonoAdicional].filter(Boolean),
-      direccion: client.direccion,
-    };
-
-    try {
-      const response = await axios.post(API_URL, clienteData);
-      setTimeout(() => {
-        setIsLoading(false);
-        setAlertMessage("Cliente registrado correctamente");
-        setAlertType("success");
-        setAlertVisible(true);
-      }, 2000);
-    } catch (error) {
+    // Aquí iría la llamada al endpoint PUT para modificar cliente
+    setTimeout(() => {
       setIsLoading(false);
-      setAlertMessage("No se pudo registrar el cliente");
-      setAlertType("error");
+      setAlertMessage("Cliente actualizado correctamente");
+      setAlertType("success");
       setAlertVisible(true);
-    }
+    }, 2000);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Registro de Cliente</Text>
+        <Text style={styles.title}>Editar Cliente</Text>
 
-        {/* 📌 Campos de entrada */}
         <TextInput placeholder="Nombre" value={client.nombre} onChangeText={(text) => handleChange("nombre", text)} style={styles.input} />
         <TextInput placeholder="Apellido Paterno" value={client.apellidoPaterno} onChangeText={(text) => handleChange("apellidoPaterno", text)} style={styles.input} />
         <TextInput placeholder="Apellido Materno" value={client.apellidoMaterno} onChangeText={(text) => handleChange("apellidoMaterno", text)} style={styles.input} />
@@ -86,46 +90,39 @@ const RegisterClient = () => {
         <TextInput placeholder="Teléfono" value={client.telefono} onChangeText={(text) => handleChange("telefono", text)} style={styles.input} keyboardType="phone-pad" />
         <TextInput placeholder="Teléfono Adicional" value={client.telefonoAdicional} onChangeText={(text) => handleChange("telefonoAdicional", text)} style={styles.input} keyboardType="phone-pad" />
 
-        {/* 📌 Dirección */}
         <Text style={styles.label}>Dirección</Text>
         <TextInput placeholder="Calle" value={client.direccion.calle} onChangeText={(text) => handleDireccionChange("calle", text)} style={styles.input} />
-        <TextInput placeholder="Número" value={client.direccion.numero} onChangeText={(text) => handleDireccionChange("numero", text)} style={styles.input} keyboardType="numeric" />
+        <TextInput placeholder="Número" value={client.direccion.numero} onChangeText={(text) => handleDireccionChange("numero", text)} style={styles.input} />
         <TextInput placeholder="Colonia" value={client.direccion.colonia} onChangeText={(text) => handleDireccionChange("colonia", text)} style={styles.input} />
         <TextInput placeholder="Ciudad" value={client.direccion.ciudad} onChangeText={(text) => handleDireccionChange("ciudad", text)} style={styles.input} />
         <TextInput placeholder="Estado" value={client.direccion.estado} onChangeText={(text) => handleDireccionChange("estado", text)} style={styles.input} />
         <TextInput placeholder="Código Postal" value={client.direccion.codigoPostal} onChangeText={(text) => handleDireccionChange("codigoPostal", text)} style={styles.input} keyboardType="numeric" />
 
-        {/* 📌 Botón para registrar */}
         <TouchableOpacity style={styles.registerButton} onPress={() => setModalVisible(true)}>
-          <Text style={styles.registerButtonText}>Registrar</Text>
+          <Text style={styles.registerButtonText}>Guardar Cambios</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 📌 Modal de confirmación */}
       <ConfirmationModal
         isVisible={isModalVisible}
-        message="¿Está seguro de que desea registrar este cliente?"
+        message="¿Está seguro de que desea actualizar este cliente?"
         onConfirm={handleConfirm}
         onCancel={() => setModalVisible(false)}
       />
 
-      {/* 📌 Modal de alerta de éxito/error */}
       <AlertModal
         isVisible={alertVisible}
         type={alertType}
         message={alertMessage}
-        redirectTo="Clients" // 📌 Cambia "ClientList" por la pantalla correcta en tu app
+        redirectTo="Clients"
         onClose={() => setAlertVisible(false)}
       />
 
-
-      {/* 📌 Modal de carga */}
       <LoadingModal isLoading={isLoading} />
     </ScrollView>
   );
 };
 
-// 📌 Estilos del formulario
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
@@ -174,4 +171,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterClient;
+export default EditClient;

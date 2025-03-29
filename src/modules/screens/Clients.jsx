@@ -6,7 +6,7 @@ import { COLORS } from "../../styles/styles";
 import Icon from "react-native-vector-icons/Ionicons";
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 
-const API_URL = "http://192.168.109.186:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
+const API_URL = "http://192.168.1.67:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const Client = () => {
   const navigation = useNavigation();
