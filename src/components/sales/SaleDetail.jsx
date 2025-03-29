@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import { COLORS , GLOBAL_STYLES} from '../styles/styles';
+import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
 
 const SaleDetail = () => {
   const route = useRoute();
@@ -18,17 +18,17 @@ const SaleDetail = () => {
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.label}>Tipo de Pago:</Text>
-        <Text style={styles.value}>{sale.paymentType}</Text>
+        <Text style={styles.value}>{sale.tipoDePago}</Text>
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.label}>Tipo de Entrega:</Text>
-        <Text style={styles.value}>{sale.deliveryType}</Text>
+        <Text style={styles.value}>{sale.tipoDeEntrega}</Text>
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.label}>Total:</Text>
-        <Text style={styles.value}>{sale.total}</Text>
+        <Text style={styles.value}>${parseFloat(sale.total).toFixed(2)}</Text>
       </View>
-      
+
       <View style={GLOBAL_STYLES.line} />
       <Text style={styles.subTitle}>Productos en esta venta</Text>
       <View style={styles.headerRow}>

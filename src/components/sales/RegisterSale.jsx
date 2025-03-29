@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
-import SalesList from '../components/SalesList';
+import SalesList from './SalesList';
 
 const RegisterSale = () => {
   const [client, setClient] = useState('');
