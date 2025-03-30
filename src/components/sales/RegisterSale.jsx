@@ -3,15 +3,19 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SalesList from './SalesList';
+import axiosInstance from '../../utils/axiosInstance';
+
 
 const RegisterSale = () => {
-  const [client, setClient] = useState('');
+  const [clients, setClients] = useState([]); // Lista real desde la base
+  const [client, setClient] = useState('');   // ID del cliente seleccionado
   const [paymentType, setPaymentType] = useState('');
   const [deliveryType, setDeliveryType] = useState('');
-  const [products, setProducts] = useState([]); 
-
+  const [products, setProducts] = useState([]);  // Lista de productos agregados a la venta
 
   const [total, setTotal] = useState(0);
+
+
 
   // 📌 Calcular total cada vez que cambia la lista de productos
   useEffect(() => {
@@ -19,6 +23,57 @@ const RegisterSale = () => {
     setTotal(newTotal);
   }, [products]);
 
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const res = await axiosInstance.get('/cliente');
+        const clientList = res.data.body?.data || [];
+        setClients(clientList);
+      } catch (error) {
+        console.error('Error al cargar clientes:', error);
+      }
+    };
+
+    fetchClients();
+  }, []);
+
+  const handleRegisterSale = async () => {
+    if (!client || products.length === 0 || !paymentType || !deliveryType) {
+      alert('Por favor completa todos los campos y agrega al menos un producto.');
+      return;
+    }
+  
+    const productosMap = {};
+    products.forEach((product) => {
+      productosMap[product.id] = product.quantity;
+    });
+  
+    const ventaData = {
+      idCliente: client,
+      productos: productosMap,
+      subTotal: total,
+      total: total,
+      estado: true,
+      aplicarIVA: false,
+      tipoDePago: paymentType,
+      tipoDeEntrega: deliveryType,
+    };
+  
+    try {
+      const response = await axiosInstance.post('/ventas/realizar', ventaData);
+      console.log('✅ Venta registrada:', response.data);
+      alert('Venta registrada exitosamente');
+      // Limpieza del formulario opcional:
+      setClient('');
+      setProducts([]);
+      setPaymentType('');
+      setDeliveryType('');
+    } catch (error) {
+      console.error('❌ Error al registrar la venta:', error);
+      alert('Ocurrió un error al registrar la venta.');
+    }
+  };
+  
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
@@ -27,13 +82,23 @@ const RegisterSale = () => {
         {/* Cliente */}
         <Text style={styles.label}>Cliente</Text>
         <View style={styles.pickerContainer}>
-          <Picker selectedValue={client} onValueChange={(itemValue) => setClient(itemValue)} style={styles.picker}>
+          <Picker
+            selectedValue={client}
+            onValueChange={(itemValue) => setClient(itemValue)}
+            style={styles.picker}
+          >
             <Picker.Item label="Seleccione un cliente" value="" />
-            <Picker.Item label="Karol Ramirez" value="Karol Ramirez" />
-            <Picker.Item label="Uziel Degante" value="Uziel Degante" />
+            {clients.map((cli) => (
+              <Picker.Item
+                key={cli.id}
+                label={`${cli.nombre} ${cli.apellidoPaterno} ${cli.apellidoMaterno || ''}`.trim()}
+                value={cli.id}
+              />
+            ))}
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
+
 
         {/* Tipo de pago */}
         <Text style={styles.label}>Tipo de Pago</Text>
@@ -67,7 +132,7 @@ const RegisterSale = () => {
         </View>
 
         {/* 📌 Botón de Registrar */}
-        <TouchableOpacity style={styles.registerButton} onPress={() => console.log('Venta registrada', { client, paymentType, deliveryType, products, total })}>
+        <TouchableOpacity style={styles.registerButton} onPress={handleRegisterSale}>
           <Text style={styles.registerButtonText}>Registrar</Text>
         </TouchableOpacity>
       </View>

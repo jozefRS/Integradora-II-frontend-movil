@@ -1,31 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-const availableProducts = [
-  { id: 1, name: 'Producto A', details: '50mg', price: 400 },
-  { id: 2, name: 'Producto B', details: '30mg', price: 300 },
-  { id: 3, name: 'Producto C', details: '20mg', price: 250 },
-];
+import axiosInstance from '../../utils/axiosInstance'; // Usamos axiosInstance para hacer las solicitudes
 
 const SalesList = ({ products, setProducts }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState([]); // Lista de productos de la base de datos
+
+  useEffect(() => {
+    fetchProducts(); // Al montar el componente, obtenemos los productos
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axiosInstance.get('/producto'); // Obtenemos los productos desde la base de datos
+      const filteredProducts = response.data.body?.data.filter(product => product.estado === true) || []; // Filtramos los productos con estado true
+      setAvailableProducts(filteredProducts); // Guardamos los productos en el estado
+    } catch (error) {
+      console.error('Error al obtener los productos:', error);
+    }
+  };
 
   const addProductToList = (product) => {
     setProducts((prevProducts) => {
       const existingProduct = prevProducts.find((p) => p.id === product.id);
-
+  
       if (existingProduct) {
         return prevProducts.map((p) =>
           p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
         );
       }
-
-      return [...prevProducts, { ...product, quantity: 1 }];
+  
+      return [
+        ...prevProducts,
+        {
+          id: product.id,
+          name: product.nombre,
+          price: parseFloat(product.precio), // 💰 aseguramos número
+          details: product.descripcion || '', // 📄 info adicional opcional
+          quantity: 1
+        }
+      ];
     });
-
+  
     setModalVisible(false);
   };
+  
 
   const updateQuantity = (id, type) => {
     setProducts((prevProducts) =>
@@ -61,13 +81,13 @@ const SalesList = ({ products, setProducts }) => {
             renderItem={({ item }) => (
               <View style={styles.productRow}>
                 <View style={styles.productInfo}>
-                  <View style={styles.productImage} />
+                  {/* <View style={styles.productImage} /> */}
                   <View style={styles.productTextContainer}>
-                    <Text style={styles.productName}>{item.name}</Text>
-                    <Text style={styles.productDetails}>{item.details}</Text>
+                    <Text style={styles.productName}>{item.name}</Text> {/* Mostrar el nombre */}
+                    {/* <Text style={styles.productDetails}>{item.details}</Text> */}
                   </View>
                 </View>
-                <Text style={styles.price}>${item.price}</Text>
+                <Text style={styles.price}>${item.price}</Text> {/* Mostrar el precio */}
                 <View style={styles.quantityContainer}>
                   <TouchableOpacity onPress={() => updateQuantity(item.id, 'decrease')}>
                     <Icon name="remove-circle-outline" size={20} color="#6C2373" />
@@ -88,15 +108,21 @@ const SalesList = ({ products, setProducts }) => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Seleccionar Producto</Text>
-            {availableProducts.map((product) => (
-              <TouchableOpacity
-                key={product.id}
-                style={styles.modalItem}
-                onPress={() => addProductToList(product)}
-              >
-                <Text style={styles.modalText}>{product.name} - ${product.price}</Text>
-              </TouchableOpacity>
-            ))}
+            {availableProducts.length === 0 ? (
+              <Text style={styles.emptyText}>No hay productos disponibles</Text>
+            ) : (
+              availableProducts.map((product) => (
+                <TouchableOpacity
+                  key={product.id}
+                  style={styles.modalItem}
+                  onPress={() => addProductToList(product)}
+                >
+                  <Text style={styles.modalText}>
+                    {product.nombre} - ${product.precio} {/* Mostrar nombre y precio */}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            )}
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>

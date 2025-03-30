@@ -7,12 +7,12 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance"; // Reemplazamos axios por axiosInstance
 import ConfirmationModal from "../status/ConfirmationModal";
 import LoadingModal from "../status/LoadingModal";
 import AlertModal from "../status/AlertModal";
 
-const API_URL = "http://192.168.1.67:8080/api/cliente";
+const API_URL = "http://192.168.1.67:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const RegisterClient = () => {
   const [client, setClient] = useState({
@@ -72,7 +72,7 @@ const RegisterClient = () => {
     };
 
     try {
-      await axios.post(API_URL, clienteData);
+      await axiosInstance.post(API_URL, clienteData); // Usamos axiosInstance aquí
       setTimeout(() => {
         setIsLoading(false);
         setAlertMessage("Cliente registrado correctamente");

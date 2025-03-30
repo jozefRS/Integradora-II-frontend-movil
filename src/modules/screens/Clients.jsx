@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance"; // Reemplazamos axios por axiosInstance
 import { COLORS } from "../../styles/styles";
 import Icon from "react-native-vector-icons/Ionicons";
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
@@ -16,7 +16,7 @@ const Client = () => {
   const fetchClients = async () => {
     try {
       setIsLoading(true); // 📌 Activa el estado de carga
-      const response = await axios.get(API_URL);
+      const response = await axiosInstance.get(API_URL); // Usamos axiosInstance aquí
       const clientes = response.data.body?.data || [];
       setClients(clientes);
     } catch (error) {

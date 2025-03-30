@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
 import Icon from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance'; // Importamos axiosInstance
 
 const URL_BASE = 'http://192.168.1.67:8080/api';
 
@@ -18,9 +18,9 @@ const Sales = () => {
   const fetchSalesData = async () => {
     try {
       const [salesRes, clientsRes, productsRes] = await Promise.all([
-        axios.get(`${URL_BASE}/ventas`),
-        axios.get(`${URL_BASE}/cliente`),
-        axios.get(`${URL_BASE}/producto`)
+        axiosInstance.get(`${URL_BASE}/ventas`),  // Usamos axiosInstance aquí
+        axiosInstance.get(`${URL_BASE}/cliente`),
+        axiosInstance.get(`${URL_BASE}/producto`)
       ]);
 
       const sales = salesRes.data.body?.data || [];

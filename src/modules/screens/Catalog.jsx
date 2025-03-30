@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
-import axios from 'axios';
-import Product from '../../components/catalog/Product';
 import { GLOBAL_STYLES } from '../../styles/styles';
+import Product from '../../components/catalog/Product';
 import LoadingModal from '../../components/status/LoadingModal';
 import AlertModal from '../../components/status/AlertModal';
 import CatalogSearchBar from '../../components/catalog/CatalogSearchbar';
-
-const BASE_URL = 'http://192.168.1.67:8080/api';
+import axiosInstance from '../../utils/axiosInstance'; // Importamos axiosInstance
 
 const CatalogScreen = () => {
   const [products, setProducts] = useState([]);
@@ -32,9 +30,9 @@ const CatalogScreen = () => {
     setIsLoading(true);
     try {
       const [prodRes, catRes, subcatRes] = await Promise.all([
-        axios.get(`${BASE_URL}/producto`),
-        axios.get(`${BASE_URL}/categoria`),
-        axios.get(`${BASE_URL}/subcategoria`),
+        axiosInstance.get('/producto'), // Usamos axiosInstance
+        axiosInstance.get('/categoria'), // Usamos axiosInstance
+        axiosInstance.get('/subcategoria'), // Usamos axiosInstance
       ]);
 
       const categorias = catRes.data.body?.data || [];
@@ -42,8 +40,8 @@ const CatalogScreen = () => {
       const productosFiltrados = prodRes.data.body.data.filter((p) => p.estado);
 
       const productosTransformados = productosFiltrados.map((p) => {
-      const categoria = categorias.find(cat => cat.id === (p.idCategoria?.[0] || ''));
-      const subcategoria = subcategorias.find(sub => sub.id === (p.idSubcategoria?.[0] || ''));
+        const categoria = categorias.find(cat => cat.id === (p.idCategoria?.[0] || ''));
+        const subcategoria = subcategorias.find(sub => sub.id === (p.idSubcategoria?.[0] || ''));
 
         return {
           id: p.id,
