@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import {View,Text,TextInput,TouchableOpacity,ScrollView,StyleSheet,} from "react-native";
 import axiosInstance from "../../utils/axiosInstance"; // Reemplazamos axios por axiosInstance
 import ConfirmationModal from "../status/ConfirmationModal";
 import LoadingModal from "../status/LoadingModal";

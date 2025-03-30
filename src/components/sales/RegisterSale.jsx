@@ -4,20 +4,27 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SalesList from './SalesList';
 import axiosInstance from '../../utils/axiosInstance';
-
+import { useNavigation } from '@react-navigation/native';
+import ConfirmationModal from '../status/ConfirmationModal';
+import LoadingModal from '../status/LoadingModal';
+import AlertModal from '../status/AlertModal';
 
 const RegisterSale = () => {
-  const [clients, setClients] = useState([]); // Lista real desde la base
-  const [client, setClient] = useState('');   // ID del cliente seleccionado
+  const navigation = useNavigation();
+
+  const [clients, setClients] = useState([]);
+  const [client, setClient] = useState('');
   const [paymentType, setPaymentType] = useState('');
   const [deliveryType, setDeliveryType] = useState('');
-  const [products, setProducts] = useState([]);  // Lista de productos agregados a la venta
-
+  const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
 
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('success');
 
-
-  // 📌 Calcular total cada vez que cambia la lista de productos
   useEffect(() => {
     const newTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
     setTotal(newTotal);
@@ -37,17 +44,15 @@ const RegisterSale = () => {
     fetchClients();
   }, []);
 
-  const handleRegisterSale = async () => {
-    if (!client || products.length === 0 || !paymentType || !deliveryType) {
-      alert('Por favor completa todos los campos y agrega al menos un producto.');
-      return;
-    }
-  
+  const handleConfirm = async () => {
+    setShowConfirmation(false);
+    setIsLoading(true);
+
     const productosMap = {};
     products.forEach((product) => {
       productosMap[product.id] = product.quantity;
     });
-  
+
     const ventaData = {
       idCliente: client,
       productos: productosMap,
@@ -58,28 +63,34 @@ const RegisterSale = () => {
       tipoDePago: paymentType,
       tipoDeEntrega: deliveryType,
     };
-  
+
     try {
-      const response = await axiosInstance.post('/ventas/realizar', ventaData);
-      console.log('✅ Venta registrada:', response.data);
-      alert('Venta registrada exitosamente');
-      // Limpieza del formulario opcional:
+      await axiosInstance.post('/ventas/realizar', ventaData);
+
       setClient('');
       setProducts([]);
       setPaymentType('');
       setDeliveryType('');
+
+      setTimeout(() => {
+        setIsLoading(false);
+        setAlertMessage('Venta registrada exitosamente.');
+        setAlertType('success');
+        setAlertVisible(true);
+      }, 1000);
     } catch (error) {
-      console.error('❌ Error al registrar la venta:', error);
-      alert('Ocurrió un error al registrar la venta.');
+      setIsLoading(false);
+      setAlertMessage('Ocurrió un error al registrar la venta.');
+      setAlertType('error');
+      setAlertVisible(true);
     }
   };
-  
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.title}>Registrar Venta</Text>
 
-        {/* Cliente */}
         <Text style={styles.label}>Cliente</Text>
         <View style={styles.pickerContainer}>
           <Picker
@@ -99,8 +110,6 @@ const RegisterSale = () => {
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
 
-
-        {/* Tipo de pago */}
         <Text style={styles.label}>Tipo de Pago</Text>
         <View style={styles.pickerContainer}>
           <Picker selectedValue={paymentType} onValueChange={(itemValue) => setPaymentType(itemValue)} style={styles.picker}>
@@ -111,7 +120,6 @@ const RegisterSale = () => {
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
 
-        {/* Tipo de Entrega */}
         <Text style={styles.label}>Tipo de Entrega</Text>
         <View style={styles.pickerContainer}>
           <Picker selectedValue={deliveryType} onValueChange={(itemValue) => setDeliveryType(itemValue)} style={styles.picker}>
@@ -122,20 +130,34 @@ const RegisterSale = () => {
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
 
-        {/* 📌 Tabla de productos */}
         <SalesList products={products} setProducts={setProducts} />
 
-        {/* 📌 Total de la venta */}
         <View style={styles.totalContainer}>
           <Text style={styles.totalText}>Total de pedido</Text>
           <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
         </View>
 
-        {/* 📌 Botón de Registrar */}
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegisterSale}>
+        <TouchableOpacity style={styles.registerButton} onPress={() => setShowConfirmation(true)}>
           <Text style={styles.registerButtonText}>Registrar</Text>
         </TouchableOpacity>
       </View>
+
+      <ConfirmationModal
+        isVisible={showConfirmation}
+        message="¿Estás seguro de que deseas registrar esta venta?"
+        onConfirm={handleConfirm}
+        onCancel={() => setShowConfirmation(false)}
+      />
+
+      <AlertModal
+        isVisible={alertVisible}
+        type={alertType}
+        message={alertMessage}
+        redirectTo="Sales"
+        onClose={() => setAlertVisible(false)}
+      />
+
+      <LoadingModal isLoading={isLoading} message="Registrando venta..." />
     </ScrollView>
   );
 };
@@ -185,7 +207,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 15,
   },
-  // 📌 Estilos para el total
   totalContainer: {
     marginTop: 20,
     alignItems: 'center',
@@ -204,7 +225,6 @@ const styles = StyleSheet.create({
     color: '#6C2373',
     marginTop: 5,
   },
-  // 📌 Estilos del botón de Registrar
   registerButton: {
     marginTop: 15,
     backgroundColor: '#6C2373',

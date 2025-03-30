@@ -5,6 +5,7 @@ import axiosInstance from "../../utils/axiosInstance"; // Reemplazamos axios por
 import { COLORS } from "../../styles/styles";
 import Icon from "react-native-vector-icons/Ionicons";
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
+import AlertModal from '../../components/status/AlertModal';
 
 const API_URL = "http://192.168.1.67:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
@@ -12,6 +13,9 @@ const Client = () => {
   const navigation = useNavigation();
   const [clients, setClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // 📌 Estado de carga
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('error');
 
   const fetchClients = async () => {
     try {
@@ -20,8 +24,9 @@ const Client = () => {
       const clientes = response.data.body?.data || [];
       setClients(clientes);
     } catch (error) {
-      console.error("Error al obtener clientes:", error);
-      Alert.alert("Error", "No se pudieron cargar los clientes");
+      setAlertMessage('Error al cargar clientes');
+      setAlertType('error');
+      setAlertVisible(true);
     } finally {
       setIsLoading(false); // 📌 Desactiva el estado de carga cuando termine
     }
@@ -37,7 +42,7 @@ const Client = () => {
       <StatusBar isLoading={isLoading} />
 
       <Text style={styles.title}>Gestión de Clientes</Text>
-      
+
       {/* Botón para registrar nuevo cliente */}
       <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("RegisterClient")}>
         <Text style={styles.registerText}>Registrar</Text>
@@ -76,6 +81,13 @@ const Client = () => {
           )}
         />
       )}
+
+      <AlertModal
+        isVisible={alertVisible}
+        type={alertType}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 };

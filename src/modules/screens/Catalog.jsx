@@ -6,6 +6,7 @@ import LoadingModal from '../../components/status/LoadingModal';
 import AlertModal from '../../components/status/AlertModal';
 import CatalogSearchBar from '../../components/catalog/CatalogSearchbar';
 import axiosInstance from '../../utils/axiosInstance'; // Importamos axiosInstance
+import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 
 const CatalogScreen = () => {
   const [products, setProducts] = useState([]);
@@ -85,8 +86,13 @@ const CatalogScreen = () => {
 
   return (
     <View style={GLOBAL_STYLES.container}>
-      <CatalogSearchBar search={search} setSearch={setSearch} />
+      {/* 📌 Animación de carga mientras se obtienen los datos */}
+      <StatusBar isLoading={isLoading} />
 
+      <CatalogSearchBar search={search} setSearch={setSearch} />
+      
+      {/* 📌 Mostrar clientes solo cuando la carga haya terminado */}
+      {!isLoading && (
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item.id}
@@ -94,8 +100,7 @@ const CatalogScreen = () => {
         numColumns={2}
         columnWrapperStyle={styles.row}
       />
-
-      <LoadingModal isLoading={isLoading} />
+      )}
 
       <AlertModal
         isVisible={alertVisible}
