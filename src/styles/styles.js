@@ -7,6 +7,12 @@ export const COLORS = {
   darkGray: '#A8A3A3',
   white: '#FFFFFF',
   black: '#000000',
+  green: '#4CAF50',
+  red: '#F44336',
+  blue: '#2196F3',
+  orange: '#FF9800',
+  gray: '#607D8B',
+  violet: '#9C27B0',
 };
 
 export const FONTS = {
@@ -56,10 +62,10 @@ export const GLOBAL_STYLES = StyleSheet.create({
     alignItems: 'center',
   },
   overlay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Fondo semitransparente
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     width: '90%',
     height: '70%',
-    margin:20,
+    margin: 20,
     padding: 20,
     borderRadius: 15,
     shadowColor: '#000',
@@ -86,5 +92,24 @@ export const GLOBAL_STYLES = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginLeft: 6,
+  },
+  tooltipText: {
+    backgroundColor: '#f0f0f0',
+    color: COLORS.black,
+    padding: 8,
+    borderRadius: 8,
+    elevation: 4,
+    fontSize: 14,
+    maxWidth: 250,
+  },
+  tooltipIcon: {
+    marginLeft: 5,
   },
 });

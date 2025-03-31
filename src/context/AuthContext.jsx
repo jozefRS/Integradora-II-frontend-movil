@@ -5,27 +5,34 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null); // Datos del usuario
 
   useEffect(() => {
     const checkToken = async () => {
       const token = await AsyncStorage.getItem('token');
+      const userData = await AsyncStorage.getItem('user');
       setIsAuthenticated(!!token);
+      setUser(JSON.parse(userData));
     };
     checkToken();
   }, []);
 
   const login = async (token) => {
     await AsyncStorage.setItem('token', token);
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
     setIsAuthenticated(true);
+    setUser(userData);
   };
 
   const logout = async () => {
     await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('user');
     setIsAuthenticated(false);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout , user}}>
       {children}
     </AuthContext.Provider>
   );

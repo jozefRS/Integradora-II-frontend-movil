@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { GLOBAL_STYLES, COLORS } from '../../styles/styles';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SalesList from './SalesList';
@@ -8,6 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import ConfirmationModal from '../status/ConfirmationModal';
 import LoadingModal from '../status/LoadingModal';
 import AlertModal from '../status/AlertModal';
+import { Switch } from 'react-native';
+
 
 const RegisterSale = () => {
   const navigation = useNavigation();
@@ -18,6 +21,8 @@ const RegisterSale = () => {
   const [deliveryType, setDeliveryType] = useState('');
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
+  const [applyIVA, setApplyIVA] = useState(false);
+  const [iva, setIva] = useState(0);
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,9 +31,13 @@ const RegisterSale = () => {
   const [alertType, setAlertType] = useState('success');
 
   useEffect(() => {
-    const newTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
-    setTotal(newTotal);
-  }, [products]);
+    const subTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
+    const calculatedIVA = applyIVA ? subTotal * 0.16 : 0;
+    setIva(calculatedIVA);
+    setTotal(subTotal + calculatedIVA);
+  }, [products, applyIVA]);
+
+
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -53,16 +62,21 @@ const RegisterSale = () => {
       productosMap[product.id] = product.quantity;
     });
 
+    const subTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
+    const iva = applyIVA ? subTotal * 0.16 : 0;
+    const totalFinal = subTotal + iva;
+
     const ventaData = {
       idCliente: client,
       productos: productosMap,
-      subTotal: total,
-      total: total,
+      subTotal: subTotal,
+      total: totalFinal,
       estado: true,
-      aplicarIVA: false,
+      aplicarIVA: applyIVA,
       tipoDePago: paymentType,
       tipoDeEntrega: deliveryType,
     };
+
 
     try {
       await axiosInstance.post('/ventas/realizar', ventaData);
@@ -116,6 +130,8 @@ const RegisterSale = () => {
             <Picker.Item label="Seleccione un tipo de pago" value="" />
             <Picker.Item label="Tarjeta" value="Tarjeta" />
             <Picker.Item label="Efectivo" value="Efectivo" />
+            <Picker.Item label="Transferencia" value="Transferencia" />
+            <Picker.Item label="Crédito" value="Crédito" />
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
@@ -126,16 +142,43 @@ const RegisterSale = () => {
             <Picker.Item label="Seleccione el tipo de entrega" value="" />
             <Picker.Item label="Físico" value="Físico" />
             <Picker.Item label="Domicilio" value="Domicilio" />
+            <Picker.Item label="Recoger en tienda" value="Recoger en tienda" />
+            <Picker.Item label="Envío" value="Envío" />
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
 
+        <View style={styles.infoContainer}>
+          <Text style={styles.label}>¿Aplicar IVA?</Text>
+          <Switch
+            value={applyIVA}
+            onValueChange={setApplyIVA}
+            thumbColor={applyIVA ? COLORS.primary : "#ccc"}
+            trackColor={{ false: "#ccc", true: COLORS.lightGray }}
+          />
+        </View>
+        <Text style={{ textAlign: 'right', marginRight: 10, color: '#555' }}>
+          IVA aplicado: ${iva.toFixed(2)}
+        </Text>
+
+
         <SalesList products={products} setProducts={setProducts} />
 
         <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>Total de pedido</Text>
-          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+          <View style={styles.rowRight}>
+            <Text style={styles.totalLabel}>Subtotal:</Text>
+            <Text style={styles.totalValue}>${(total - iva).toFixed(2)}</Text>
+          </View>
+          <View style={styles.rowRight}>
+            <Text style={styles.totalLabel}>IVA (16%):</Text>
+            <Text style={styles.totalValue}>${iva.toFixed(2)}</Text>
+          </View>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalText}>Total:</Text>
+            <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+          </View>
         </View>
+
 
         <TouchableOpacity style={styles.registerButton} onPress={() => setShowConfirmation(true)}>
           <Text style={styles.registerButtonText}>Registrar</Text>
@@ -211,8 +254,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignItems: 'center',
     paddingVertical: 15,
-    borderTopWidth: 2,
-    borderColor: '#6C2373',
   },
   totalText: {
     fontSize: 16,
@@ -237,6 +278,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  switch: {
+    marginLeft: 10,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  totalLabel: {
+    fontSize: 16,
+    color: '#444',
+  },
+  totalValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#444',
+  },
+  
 });
 
 export default RegisterSale;
