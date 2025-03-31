@@ -7,7 +7,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 import AlertModal from '../../components/status/AlertModal';
 
-const API_URL = "http://192.168.1.67:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
+const API_URL = "http://192.168.106.115:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const Client = () => {
   const navigation = useNavigation();
@@ -68,7 +68,7 @@ const Client = () => {
               <Text style={styles.cell}>{item.telefono[0]}</Text>
               <View style={styles.actions}>
                 <TouchableOpacity onPress={() => navigation.navigate("EditClient", { client: item })}>
-                  <Icon name="pencil-outline" size={20} color={COLORS.primary} />
+                  <Icon name="pencil-outline" size={20} color={COLORS.black} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate("ClientDetail", { client: item })}>
                   <Icon name="eye-outline" size={20} color={COLORS.black} />

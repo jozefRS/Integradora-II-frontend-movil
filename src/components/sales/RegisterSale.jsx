@@ -10,10 +10,13 @@ import ConfirmationModal from '../status/ConfirmationModal';
 import LoadingModal from '../status/LoadingModal';
 import AlertModal from '../status/AlertModal';
 import { Switch } from 'react-native';
+import { useContext } from 'react';
+import { CatalogContext } from '../../context/CatalogContext';
 
 
 const RegisterSale = () => {
   const navigation = useNavigation();
+  const { updateStock } = useContext(CatalogContext);
 
   const [clients, setClients] = useState([]);
   const [client, setClient] = useState('');
@@ -52,24 +55,27 @@ const RegisterSale = () => {
 
     fetchClients();
   }, []);
-
+  
   const handleConfirm = async () => {
     setShowConfirmation(false);
     setIsLoading(true);
 
+    // 1. Construimos el 'productosMap' para enviar al backend
     const productosMap = {};
     products.forEach((product) => {
       productosMap[product.id] = product.quantity;
     });
 
+    // 2. Calculamos subtotal, IVA, total
     const subTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
     const iva = applyIVA ? subTotal * 0.16 : 0;
     const totalFinal = subTotal + iva;
 
+    // 3. Armamos el objeto para la venta
     const ventaData = {
       idCliente: client,
       productos: productosMap,
-      subTotal: subTotal,
+      subTotal,
       total: totalFinal,
       estado: true,
       aplicarIVA: applyIVA,
@@ -77,22 +83,37 @@ const RegisterSale = () => {
       tipoDeEntrega: deliveryType,
     };
 
-
     try {
+      // 4. Enviamos la venta al backend
       await axiosInstance.post('/ventas/realizar', ventaData);
 
+      // 5. (Opcional) Actualizar stock localmente en el contexto
+      //    Creamos un array "updates" con { productId, quantitySold }
+      //    para cada producto vendido.
+      const updates = products.map((prod) => ({
+        productId: prod.id,
+        quantitySold: prod.quantity,
+      }));
+
+      // Llamamos la función que descuenta del stock
+      updateStock(updates);
+
+      // 6. Limpiamos estados
       setClient('');
       setProducts([]);
       setPaymentType('');
       setDeliveryType('');
 
+      // 7. Mostramos feedback al usuario
       setTimeout(() => {
         setIsLoading(false);
         setAlertMessage('Venta registrada exitosamente.');
         setAlertType('success');
         setAlertVisible(true);
       }, 1000);
+
     } catch (error) {
+      // Manejo de error
       setIsLoading(false);
       setAlertMessage('Ocurrió un error al registrar la venta.');
       setAlertType('error');

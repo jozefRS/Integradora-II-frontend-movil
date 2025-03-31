@@ -7,7 +7,7 @@ import axiosInstance from '../../utils/axiosInstance'; // Importamos axiosInstan
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 import AlertModal from '../../components/status/AlertModal';
 
-const URL_BASE = 'http://192.168.1.67:8080/api';
+const URL_BASE = 'http://192.168.106.115:8080/api';
 
 const Sales = () => {
   const navigation = useNavigation();

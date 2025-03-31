@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import axiosInstance from '../../utils/axiosInstance'; // Importamos el axiosInstance
 import { GLOBAL_STYLES, COLORS, FONTS } from '../../styles/styles';
 
-const API_URL = 'http://192.168.1.67:8080/auth/login';
+const API_URL = 'http://192.168.106.115:8080/auth/login';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');

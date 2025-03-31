@@ -5,7 +5,7 @@ import ConfirmationModal from "../status/ConfirmationModal";
 import LoadingModal from "../status/LoadingModal";
 import AlertModal from "../status/AlertModal";
 
-const API_URL = "http://192.168.1.67:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
+const API_URL = "http://192.168.106.115:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const RegisterClient = () => {
   const [client, setClient] = useState({
