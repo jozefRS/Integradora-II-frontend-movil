@@ -23,8 +23,9 @@ export const CatalogProvider = ({ children }) => {
       const productosFiltrados = prodRes.data.body.data.filter((p) => p.estado);
 
       const productosTransformados = productosFiltrados.map((p) => {
-        const categoria = categorias.find(cat => cat.id === (p.idCategoria?.[0] || ''));
-        const subcategoria = subcategorias.find(sub => sub.id === (p.idSubcategoria?.[0] || ''));
+        console.log("🛍️Producto: ",p);
+        const categoria = categorias.find(cat => cat.id === p.idCategoria) || null;
+        const subcategoria = subcategorias.find(sub => sub.id === (p.idSubcategoria || null));
 
         return {
           id: p.id,
@@ -36,7 +37,7 @@ export const CatalogProvider = ({ children }) => {
           stock: p.stock,
           content: p.cantidad ? `${p.cantidad} ${p.unidadMedida}` : 'N/A',
           category: categoria ? categoria.nombre : 'Sin categoría',
-          containerType: subcategoria ? subcategoria.nombre : 'Sin tipo'
+          subcategory: subcategoria ? subcategoria.nombre : 'Sin subcategoría',
         };
       });
 
@@ -46,6 +47,7 @@ export const CatalogProvider = ({ children }) => {
     } catch (error) {
       console.error('Error al cargar el catálogo:', error);
       // Manejo de errores, si gustas
+      
     }
   };
 

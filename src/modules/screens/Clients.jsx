@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import axiosInstance from "../../utils/axiosInstance"; // Reemplazamos axios por axiosInstance
-import { COLORS } from "../../styles/styles";
+import { GLOBAL_STYLES,COLORS } from "../../styles/styles";
 import Icon from "react-native-vector-icons/Ionicons";
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 import AlertModal from '../../components/status/AlertModal';
@@ -42,10 +42,11 @@ const Client = () => {
       <StatusBar isLoading={isLoading} />
 
       <Text style={styles.title}>Gestión de Clientes</Text>
+      <View style={GLOBAL_STYLES.line} />
 
       {/* Botón para registrar nuevo cliente */}
       <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("RegisterClient")}>
-        <Text style={styles.registerText}>Registrar</Text>
+        <Text style={styles.registerButtonText}>Registrar</Text>
       </TouchableOpacity>
 
       {/* 📌 Encabezados de la tabla */}
@@ -107,23 +108,23 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   registerButton: {
-    alignSelf: "flex-end",
     backgroundColor: COLORS.primary,
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 15,
   },
-  registerText: {
-    color: COLORS.white,
-    fontWeight: "bold",
+  registerButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.lightGray,
+    borderBottomWidth: 1,
+    borderColor: COLORS.lightGray,
   },
   headerText: {
     fontWeight: "bold",

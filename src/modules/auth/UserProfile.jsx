@@ -1,36 +1,34 @@
-import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { COLORS } from '../../styles/styles';
 import { AuthContext } from '../../context/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ConfirmationModal from '../../components/status/ConfirmationModal';
+import LoadingModal from '../../components/status/LoadingModal';
 
 const UserProfile = () => {
-  const { user, logout } = useContext(AuthContext); // Asegúrate de tener los datos del usuario en el contexto
+  const { user, logout } = useContext(AuthContext);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro de que quieres salir de la aplicación?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Cerrar sesión', onPress: logout }
-      ]
-    );
+  const handleLogout = async () => {
+    setConfirmVisible(false); // Oculta el modal
+    setIsLoading(true); // Muestra loading
+    await logout(); // Ejecuta logout
+    setIsLoading(false); // Oculta loading (aunque por navegación quizás no lo veas mucho)
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Encabezado con foto de perfil */}
       <View style={styles.profileHeader}>
         <Image
-          source={user?.photoURL ? { uri: user.photoURL } : {uri:'https://avatar.iran.liara.run/public/boy'}}
+          source={user?.photoURL ? { uri: user.photoURL } : { uri: 'https://avatar.iran.liara.run/public/boy' }}
           style={styles.avatar}
         />
         <Text style={styles.userName}>{user?.name || 'Usuario'}</Text>
         <Text style={styles.userEmail}>{user?.email}</Text>
       </View>
 
-      {/* Sección de información del usuario */}
       <View style={styles.infoCard}>
         <View style={styles.infoItem}>
           <Icon name="person" size={22} color={COLORS.primary} />
@@ -48,15 +46,25 @@ const UserProfile = () => {
         </View>
       </View>
 
-      {/* Botón de cierre de sesión */}
-      <TouchableOpacity 
-        style={styles.logoutButton} 
-        onPress={handleLogout}
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => setConfirmVisible(true)}
         activeOpacity={0.8}
       >
         <Icon name="exit-to-app" size={24} color={COLORS.white} />
         <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
       </TouchableOpacity>
+
+      {/* Modal de Confirmación */}
+      <ConfirmationModal
+        isVisible={confirmVisible}
+        message="¿Estás seguro de que quieres cerrar sesión?"
+        onConfirm={handleLogout}
+        onCancel={() => setConfirmVisible(false)}
+      />
+
+      {/* Modal de Carga */}
+      <LoadingModal isLoading={isLoading} message="Cerrando sesión..." />
     </ScrollView>
   );
 };

@@ -23,7 +23,7 @@ const ProductDetail = () => {
 
           <Text style={styles.productInfo}><Text style={styles.label}>Contenido:</Text> {product.content || 'No especificado'}</Text>
           <Text style={styles.productInfo}><Text style={styles.label}>Categoría:</Text> {product.category || 'No especificada'}</Text>
-          <Text style={styles.productInfo}><Text style={styles.label}>Tipo de contenedor:</Text> {product.containerType || 'No especificado'}</Text>
+          <Text style={styles.productInfo}><Text style={styles.label}>Sub-Categoria:</Text> {product.subcategory || 'No especificado'}</Text>
 
           <View style={GLOBAL_STYLES.line} />
 
