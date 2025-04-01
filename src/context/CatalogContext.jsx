@@ -13,9 +13,9 @@ export const CatalogProvider = ({ children }) => {
     try {
       // Podrías mostrar un loader global si quieres
       const [prodRes, catRes, subcatRes] = await Promise.all([
-        axiosInstance.get('/producto'),
-        axiosInstance.get('/categoria'),
-        axiosInstance.get('/subcategoria'),
+        axiosInstance.get('api/producto'),
+        axiosInstance.get('api/categoria'),
+        axiosInstance.get('api/subcategoria'),
       ]);
 
       const categorias = catRes.data.body?.data || [];

@@ -7,7 +7,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 import AlertModal from '../../components/status/AlertModal';
 
-const API_URL = "http://192.168.106.115:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const Client = () => {
   const navigation = useNavigation();
@@ -20,7 +19,7 @@ const Client = () => {
   const fetchClients = async () => {
     try {
       setIsLoading(true); // 📌 Activa el estado de carga
-      const response = await axiosInstance.get(API_URL); // Usamos axiosInstance aquí
+      const response = await axiosInstance.get('api/cliente'); // Usamos axiosInstance aquí
       const clientes = response.data.body?.data || [];
       setClients(clientes);
     } catch (error) {

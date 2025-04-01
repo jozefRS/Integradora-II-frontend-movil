@@ -13,7 +13,7 @@ const SalesList = ({ products, setProducts }) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axiosInstance.get('/producto'); // Obtenemos los productos desde la base de datos
+      const response = await axiosInstance.get('api/producto'); // Obtenemos los productos desde la base de datos
       const filteredProducts = response.data.body?.data.filter(product => product.estado === true) || []; // Filtramos los productos con estado true
       setAvailableProducts(filteredProducts); // Guardamos los productos en el estado
     } catch (error) {

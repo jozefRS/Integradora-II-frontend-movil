@@ -5,7 +5,6 @@ import ConfirmationModal from "../status/ConfirmationModal";
 import LoadingModal from "../status/LoadingModal";
 import AlertModal from "../status/AlertModal";
 
-const API_URL = "http://192.168.106.115:8080/api/cliente"; // ⚠️ Reemplaza con tu IP local
 
 const RegisterClient = () => {
   const [client, setClient] = useState({
@@ -65,7 +64,7 @@ const RegisterClient = () => {
     };
 
     try {
-      await axiosInstance.post(API_URL, clienteData); // Usamos axiosInstance aquí
+      await axiosInstance.post('api/cliente', clienteData); // Usamos axiosInstance aquí
       setTimeout(() => {
         setIsLoading(false);
         setAlertMessage("Cliente registrado correctamente");

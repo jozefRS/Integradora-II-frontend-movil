@@ -7,7 +7,6 @@ import axiosInstance from '../../utils/axiosInstance'; // Importamos axiosInstan
 import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
 import AlertModal from '../../components/status/AlertModal';
 
-const URL_BASE = 'http://192.168.106.115:8080/api';
 
 const Sales = () => {
   const navigation = useNavigation();
@@ -25,9 +24,9 @@ const Sales = () => {
     try {
       setIsLoading(true); // 📌 Activa el estado de carga
       const [salesRes, clientsRes, productsRes] = await Promise.all([
-        axiosInstance.get(`${URL_BASE}/ventas`),  // Usamos axiosInstance aquí
-        axiosInstance.get(`${URL_BASE}/cliente`),
-        axiosInstance.get(`${URL_BASE}/producto`)
+        axiosInstance.get('api/ventas'),  // Usamos axiosInstance aquí
+        axiosInstance.get('api/cliente'),
+        axiosInstance.get('api/producto'),
       ]);
 
       const sales = salesRes.data.body?.data || [];

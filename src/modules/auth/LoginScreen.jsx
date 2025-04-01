@@ -6,8 +6,6 @@ import { GLOBAL_STYLES, FONTS } from '../../styles/styles';
 import AlertModal from '../../components/status/AlertModal';
 import LoadingModal from '../../components/status/LoadingModal';
 
-const API_URL = 'http://192.168.106.115:8080/auth/login';
-
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -22,10 +20,25 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get(`${API_URL}?email=${email}&contrasena=${contrasena}`);
-      const token = response.data;
-      login(token);
+      const response = await axiosInstance.post('/auth/login', {
+        email,
+        contrasena
+      });
+  
+      console.log("🔍 Response completa:", JSON.stringify(response, null, 2));
+  
+      const token = response.data.token;
+      console.log("🎫 Token recibido:", token);
+  
+      if (token) {
+        // ✅ Pasamos toda la respuesta (token, email, rol)
+        login(response.data);
+      } else {
+        throw new Error("Token no recibido");
+      }
+  
     } catch (error) {
+      console.log("❌ Error en login:", error?.response?.data || error.message || error);
       setAlertMessage('Credenciales inválidas. Verifica tu correo y contraseña.');
       setAlertType('error');
       setAlertVisible(true);
@@ -33,6 +46,7 @@ const LoginScreen = () => {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <ImageBackground
@@ -67,7 +81,6 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Alert y loading modals */}
       <AlertModal
         isVisible={alertVisible}
         type={alertType}

@@ -45,7 +45,7 @@ const RegisterSale = () => {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await axiosInstance.get('/cliente');
+        const res = await axiosInstance.get('api/cliente');
         const clientList = res.data.body?.data || [];
         setClients(clientList);
       } catch (error) {
@@ -85,7 +85,7 @@ const RegisterSale = () => {
 
     try {
       // 4. Enviamos la venta al backend
-      await axiosInstance.post('/ventas/realizar', ventaData);
+      await axiosInstance.post('api/ventas/realizar', ventaData);
 
       // 5. (Opcional) Actualizar stock localmente en el contexto
       //    Creamos un array "updates" con { productId, quantitySold }
