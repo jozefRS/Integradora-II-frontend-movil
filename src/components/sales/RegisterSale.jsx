@@ -12,11 +12,14 @@ import AlertModal from '../status/AlertModal';
 import { Switch } from 'react-native';
 import { useContext } from 'react';
 import { CatalogContext } from '../../context/CatalogContext';
+import { AuthContext } from '../../context/AuthContext'; // <-- ✅ nuevo
+
 
 
 const RegisterSale = () => {
   const navigation = useNavigation();
   const { updateStock } = useContext(CatalogContext);
+  const { user } = useContext(AuthContext); // <-- ✅ obtenemos el id del trabajador
 
   const [clients, setClients] = useState([]);
   const [client, setClient] = useState('');
@@ -71,6 +74,8 @@ const RegisterSale = () => {
     const iva = applyIVA ? subTotal * 0.16 : 0;
     const totalFinal = subTotal + iva;
 
+    console.log("🧪 Trabajador actual desde contexto:", user);
+
     // 3. Armamos el objeto para la venta
     const ventaData = {
       idCliente: client,
@@ -81,6 +86,7 @@ const RegisterSale = () => {
       aplicarIVA: applyIVA,
       tipoDePago: paymentType,
       tipoDeEntrega: deliveryType,
+      idTrabajador: user?.idUsuario, 
     };
 
     try {

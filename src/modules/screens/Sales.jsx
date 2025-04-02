@@ -3,18 +3,21 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
 import Icon from 'react-native-vector-icons/Ionicons';
-import axiosInstance from '../../utils/axiosInstance'; // Importamos axiosInstance
-import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
+import axiosInstance from '../../utils/axiosInstance';
+import StatusBar from "../../components/status/StatusBar";
 import AlertModal from '../../components/status/AlertModal';
-
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 
 const Sales = () => {
   const navigation = useNavigation();
   const [salesData, setSalesData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // 📌 Estado de carga
+  const [isLoading, setIsLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('error');
+  const { user } = useContext(AuthContext); // obtenemos idUsuario
+
 
   useEffect(() => {
     fetchSalesData();
@@ -22,29 +25,27 @@ const Sales = () => {
 
   const fetchSalesData = async () => {
     try {
-      setIsLoading(true); // 📌 Activa el estado de carga
+      setIsLoading(true);
       const [salesRes, clientsRes, productsRes] = await Promise.all([
-        axiosInstance.get('api/ventas'),  // Usamos axiosInstance aquí
+        axiosInstance.get('api/ventas/trabajador'),
         axiosInstance.get('api/cliente'),
         axiosInstance.get('api/producto'),
       ]);
-
-      const sales = salesRes.data.body?.data || [];
+  
+      const sales = salesRes.data || []; // ← sin .body si tu backend responde directo con lista
       const clients = clientsRes.data.body?.data || [];
       const products = productsRes.data.body?.data || [];
-
+  
       const enrichedSales = sales.map(sale => {
         const client = clients.find(c => c.id === sale.idCliente);
         const clientName = client
           ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno || ''}`.trim()
           : 'Cliente desconocido';
-
+  
         const saleProducts = Object.entries(sale.productos).map(([productId, quantity]) => {
-          console.log('🧩 Buscando producto con ID:', productId);
           const product = products.find(p => p.id === productId);
-
+  
           if (!product) {
-            console.warn(`❌ Producto con ID ${productId} no encontrado en la lista de productos`);
             return {
               id: productId,
               name: 'Producto no disponible',
@@ -53,7 +54,7 @@ const Sales = () => {
               total: '$0.00'
             };
           }
-
+  
           const unitPrice = parseFloat(product.precio);
           return {
             id: productId,
@@ -63,27 +64,27 @@ const Sales = () => {
             total: `$${(unitPrice * quantity).toFixed(2)}`
           };
         });
-
+  
         return {
           ...sale,
           clientName,
           products: saleProducts
         };
       });
-
+  
       setSalesData(enrichedSales);
     } catch (error) {
       setAlertMessage('Error al cargar ventas');
       setAlertType('error');
       setAlertVisible(true);
     } finally {
-      setIsLoading(false); // 📌 Desactiva el estado de carga cuando termine
+      setIsLoading(false);
     }
   };
+  
 
   return (
     <View style={styles.container}>
-      {/* 📌 Animación de carga mientras se obtienen los datos */}
       <StatusBar isLoading={isLoading} />
 
       <Text style={styles.title}>Gestión de Ventas</Text>
@@ -96,7 +97,6 @@ const Sales = () => {
         <Text style={styles.registerButtonText}>Registrar Venta</Text>
       </TouchableOpacity>
 
-      {/* Encabezados de la tabla */}
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Cliente</Text>
         <Text style={styles.headerText}>Tipo de pago</Text>
@@ -105,9 +105,7 @@ const Sales = () => {
         <Text style={styles.headerText}>Acciones</Text>
       </View>
 
-      {/* 📌 Mostrar clientes solo cuando la carga haya terminado */}
       {!isLoading && (
-
         <FlatList
           data={salesData}
           keyExtractor={(item) => item.id}
@@ -127,6 +125,7 @@ const Sales = () => {
           )}
         />
       )}
+
       <AlertModal
         isVisible={alertVisible}
         type={alertType}

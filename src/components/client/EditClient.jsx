@@ -4,6 +4,7 @@ import { useRoute } from "@react-navigation/native";
 import ConfirmationModal from "../status/ConfirmationModal";
 import LoadingModal from "../status/LoadingModal";
 import AlertModal from "../status/AlertModal";
+import axiosInstance from "../../utils/axiosInstance";
 
 const EditClient = () => {
   const route = useRoute();
@@ -14,8 +15,7 @@ const EditClient = () => {
     apellidoPaterno: "",
     apellidoMaterno: "",
     correo: "",
-    telefono: "",
-    telefonoAdicional: "",
+    telefonos: [""],
     direccion: {
       calle: "",
       numero: "",
@@ -32,7 +32,6 @@ const EditClient = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
 
-  // 📌 Precargar datos del cliente
   useEffect(() => {
     if (existingClient) {
       setClient({
@@ -40,8 +39,7 @@ const EditClient = () => {
         apellidoPaterno: existingClient.apellidoPaterno || "",
         apellidoMaterno: existingClient.apellidoMaterno || "",
         correo: existingClient.correo || "",
-        telefono: existingClient.telefono?.[0] || "",
-        telefonoAdicional: existingClient.telefono?.[1] || "",
+        telefonos: existingClient.telefono || [""],
         direccion: {
           calle: existingClient.direccion?.calle || "",
           numero: existingClient.direccion?.numero || "",
@@ -65,17 +63,50 @@ const EditClient = () => {
     });
   };
 
+  const handleTelefonoChange = (index, value) => {
+    const nuevosTelefonos = [...client.telefonos];
+    nuevosTelefonos[index] = value;
+    setClient({ ...client, telefonos: nuevosTelefonos });
+  };
+
+  const agregarTelefono = () => {
+    setClient({ ...client, telefonos: [...client.telefonos, ""] });
+  };
+
+  const eliminarTelefono = (index) => {
+    const nuevosTelefonos = client.telefonos.filter((_, i) => i !== index);
+    setClient({ ...client, telefonos: nuevosTelefonos });
+  };
+
   const handleConfirm = async () => {
     setModalVisible(false);
     setIsLoading(true);
 
-    // Aquí iría la llamada al endpoint PUT para modificar cliente
-    setTimeout(() => {
+    const clienteData = {
+      nombre: client.nombre,
+      apellidoPaterno: client.apellidoPaterno,
+      apellidoMaterno: client.apellidoMaterno,
+      correo: client.correo,
+      telefono: client.telefonos.filter((t) => t.trim() !== ""),
+      direccion: client.direccion,
+    };
+
+    try {
+      const res = await axiosInstance.put(`api/cliente/${existingClient.id}`, clienteData);
+      console.log("✅ Cliente actualizado:", res.data);
+      setTimeout(() => {
+        setIsLoading(false);
+        setAlertMessage("Cliente actualizado correctamente");
+        setAlertType("success");
+        setAlertVisible(true);
+      }, 1000);
+    } catch (error) {
+      console.error("❌ Error al actualizar cliente:", error);
       setIsLoading(false);
-      setAlertMessage("Cliente actualizado correctamente");
-      setAlertType("success");
+      setAlertMessage("No se pudo actualizar el cliente");
+      setAlertType("error");
       setAlertVisible(true);
-    }, 2000);
+    }
   };
 
   return (
@@ -87,8 +118,27 @@ const EditClient = () => {
         <TextInput placeholder="Apellido Paterno" value={client.apellidoPaterno} onChangeText={(text) => handleChange("apellidoPaterno", text)} style={styles.input} />
         <TextInput placeholder="Apellido Materno" value={client.apellidoMaterno} onChangeText={(text) => handleChange("apellidoMaterno", text)} style={styles.input} />
         <TextInput placeholder="Correo" value={client.correo} onChangeText={(text) => handleChange("correo", text)} style={styles.input} keyboardType="email-address" />
-        <TextInput placeholder="Teléfono" value={client.telefono} onChangeText={(text) => handleChange("telefono", text)} style={styles.input} keyboardType="phone-pad" />
-        <TextInput placeholder="Teléfono Adicional" value={client.telefonoAdicional} onChangeText={(text) => handleChange("telefonoAdicional", text)} style={styles.input} keyboardType="phone-pad" />
+
+        <Text style={styles.label}>Teléfonos</Text>
+        {client.telefonos.map((telefono, index) => (
+          <View key={index} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              placeholder={`Teléfono ${index + 1}`}
+              value={telefono}
+              onChangeText={(text) => handleTelefonoChange(index, text)}
+              style={[styles.input, { flex: 1 }]}
+              keyboardType="phone-pad"
+            />
+            {client.telefonos.length > 1 && (
+              <TouchableOpacity onPress={() => eliminarTelefono(index)}>
+                <Text style={{ marginLeft: 10, color: 'red' }}>Eliminar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ))}
+        <TouchableOpacity onPress={agregarTelefono}>
+          <Text style={styles.addPhone}>+ Agregar otro teléfono</Text>
+        </TouchableOpacity>
 
         <Text style={styles.label}>Dirección</Text>
         <TextInput placeholder="Calle" value={client.direccion.calle} onChangeText={(text) => handleDireccionChange("calle", text)} style={styles.input} />
@@ -156,6 +206,12 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
     backgroundColor: "#F8F3F8",
+  },
+  addPhone: {
+    color: "#6C2373",
+    fontWeight: "bold",
+    marginBottom: 15,
+    marginLeft: 10,
   },
   registerButton: {
     marginTop: 15,

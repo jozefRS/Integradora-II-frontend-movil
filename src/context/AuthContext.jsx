@@ -21,16 +21,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (responseData) => {
-    const { token, email, rol } = responseData;
+    const { token, idUsuario, rol } = responseData;
+
     const userData = {
-      email,
+      idUsuario,
       role: rol,
     };
 
     await AsyncStorage.setItem('token', token);
-    console.log("🧪 Guardando token:", token); // Debug
-
     await AsyncStorage.setItem('user', JSON.stringify(userData));
+
+    console.log("🔐 Guardando token:", token, "🗝️ ID Usuario:", idUsuario);
+
     setIsAuthenticated(true);
     setUser(userData);
   };

@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import axiosInstance from "../../utils/axiosInstance"; // Reemplazamos axios por axiosInstance
-import { GLOBAL_STYLES,COLORS } from "../../styles/styles";
+import axiosInstance from "../../utils/axiosInstance";
+import { GLOBAL_STYLES, COLORS } from "../../styles/styles";
 import Icon from "react-native-vector-icons/Ionicons";
-import StatusBar from "../../components/status/StatusBar"; // 📌 Importamos el componente de carga
+import StatusBar from "../../components/status/StatusBar";
 import AlertModal from '../../components/status/AlertModal';
+import ConfirmationModal from '../../components/status/ConfirmationModal';
 
-
-const Client = () => {
+const ClientWithDeactivate = () => {
   const navigation = useNavigation();
   const [clients, setClients] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // 📌 Estado de carga
+  const [isLoading, setIsLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('error');
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState(null);
 
   const fetchClients = async () => {
     try {
-      setIsLoading(true); // 📌 Activa el estado de carga
-      const response = await axiosInstance.get('api/cliente'); // Usamos axiosInstance aquí
+      setIsLoading(true);
+      const response = await axiosInstance.get('api/cliente');
       const clientes = response.data.body?.data || [];
       setClients(clientes);
     } catch (error) {
@@ -27,7 +29,7 @@ const Client = () => {
       setAlertType('error');
       setAlertVisible(true);
     } finally {
-      setIsLoading(false); // 📌 Desactiva el estado de carga cuando termine
+      setIsLoading(false);
     }
   };
 
@@ -35,20 +37,37 @@ const Client = () => {
     fetchClients();
   }, []);
 
+  const handleDeactivateClient = async () => {
+    try {
+      setConfirmVisible(false);
+      await axiosInstance.patch(`api/cliente/${selectedClientId}`);
+      setAlertMessage('Cliente desactivado correctamente');
+      setAlertType('success');
+      setAlertVisible(true);
+      fetchClients();
+    } catch (error) {
+      setAlertMessage('No se pudo desactivar el cliente');
+      setAlertType('error');
+      setAlertVisible(true);
+    }
+  };
+
+  const showConfirmationModal = (id) => {
+    setSelectedClientId(id);
+    setConfirmVisible(true);
+  };
+
   return (
     <View style={styles.container}>
-      {/* 📌 Animación de carga mientras se obtienen los datos */}
       <StatusBar isLoading={isLoading} />
 
       <Text style={styles.title}>Gestión de Clientes</Text>
       <View style={GLOBAL_STYLES.line} />
 
-      {/* Botón para registrar nuevo cliente */}
       <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("RegisterClient")}>
         <Text style={styles.registerButtonText}>Registrar</Text>
       </TouchableOpacity>
 
-      {/* 📌 Encabezados de la tabla */}
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>Nombre</Text>
         <Text style={styles.headerText}>Email</Text>
@@ -56,7 +75,6 @@ const Client = () => {
         <Text style={styles.headerText}>Acciones</Text>
       </View>
 
-      {/* 📌 Mostrar clientes solo cuando la carga haya terminado */}
       {!isLoading && (
         <FlatList
           data={clients}
@@ -73,7 +91,7 @@ const Client = () => {
                 <TouchableOpacity onPress={() => navigation.navigate("ClientDetail", { client: item })}>
                   <Icon name="eye-outline" size={20} color={COLORS.black} />
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => showConfirmationModal(item.id)}>
                   <Icon name="trash-outline" size={20} color={COLORS.darkGray} />
                 </TouchableOpacity>
               </View>
@@ -81,6 +99,13 @@ const Client = () => {
           )}
         />
       )}
+
+      <ConfirmationModal
+        isVisible={confirmVisible}
+        message="¿Deseas desactivar este cliente?"
+        onConfirm={handleDeactivateClient}
+        onCancel={() => setConfirmVisible(false)}
+      />
 
       <AlertModal
         isVisible={alertVisible}
@@ -92,7 +117,6 @@ const Client = () => {
   );
 };
 
-// 📌 Estilos mejorados
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -152,4 +176,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Client;
+export default ClientWithDeactivate;
