@@ -5,38 +5,37 @@ import { COLORS } from "../../styles/styles";
 
 export default function ClientDetail() {
   const route = useRoute();
-  const { client } = route.params; // 📌 Obtener datos del cliente desde la navegación
+  const { client } = route.params;
   const direccion = client.direccion || {};
+  const telefonos = client.telefono || [];
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        {/* 📌 Nombre del Cliente */}
         <Text style={styles.clientName}>
           {client.nombre} {client.apellidoPaterno} {client.apellidoMaterno}
         </Text>
         <Text style={styles.description}>Detalles de contacto y dirección del cliente</Text>
 
-        {/* 📌 Línea divisoria */}
         <View style={styles.divider} />
 
-        {/* 📌 Información detallada */}
         <Text style={styles.info}>
           <Text style={styles.label}>Correo: </Text> {client.correo}
         </Text>
 
-        {/* 📌 Teléfonos */}
-        <Text style={styles.info}>
-          <Text style={styles.label}>Teléfono principal: </Text> {client.telefono[0] || "No disponible"}
-        </Text>
-        <Text style={styles.info}>
-          <Text style={styles.label}>Teléfono adicional: </Text> {client.telefono[1] || "No disponible"}
-        </Text>
+        <Text style={styles.sectionTitle}>Teléfonos registrados</Text>
+        {telefonos.length > 0 ? (
+          telefonos.map((tel, index) => (
+            <Text key={index} style={styles.info}>
+              <Text style={styles.label}>Teléfono {index + 1}: </Text> {tel}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.info}>No hay teléfonos registrados.</Text>
+        )}
 
-        {/* 📌 Línea divisoria */}
         <View style={styles.divider} />
 
-        {/* 📌 Dirección desglosada */}
         <Text style={styles.sectionTitle}>Dirección</Text>
         <Text style={styles.info}>
           <Text style={styles.label}>Calle: </Text> {direccion.calle?.trim() || 'No disponible'}
@@ -57,17 +56,23 @@ export default function ClientDetail() {
           <Text style={styles.label}>Código Postal: </Text> {direccion.codigoPostal?.trim() || 'No disponible'}
         </Text>
 
-        {/* 📌 Línea divisoria */}
         <View style={styles.divider} />
 
-        {/* 📌 Bloque final para posibles botones o más información */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Cliente activo</Text>
+        <View
+          style={[
+            styles.footer,
+            { backgroundColor: client.status ? COLORS.primary : "#ccc" }
+          ]}
+        >
+          <Text style={styles.footerText}>
+          {client.status ? "Cliente activo" : "Cliente inactivo"}
+          </Text>
         </View>
       </View>
     </View>
   );
 }
+
 
 // 📌 Estilos
 const styles = StyleSheet.create({
