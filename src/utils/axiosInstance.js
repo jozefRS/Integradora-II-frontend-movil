@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://192.168.1.67:8080', // ✅ SIN /api para permitir rutas como /auth/login
+  baseURL: 'http://192.168.110.74:8080', // ✅ SIN /api para permitir rutas como /auth/login
   headers: {
     'Content-Type': 'application/json',
   },

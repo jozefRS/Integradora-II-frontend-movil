@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { GLOBAL_STYLES, COLORS } from '../../styles/styles';
 import { Picker } from '@react-native-picker/picker';
@@ -12,9 +12,15 @@ import AlertModal from '../status/AlertModal';
 import { Switch } from 'react-native';
 import { useContext } from 'react';
 import { CatalogContext } from '../../context/CatalogContext';
-import { AuthContext } from '../../context/AuthContext'; // <-- ✅ nuevo
+import { AuthContext } from '../../context/AuthContext';
+import * as yup from 'yup';
 
-
+const validationSchema = yup.object().shape({
+  client: yup.string().required('Seleccione un cliente'),
+  paymentType: yup.string().required('Seleccione tipo de pago'),
+  deliveryType: yup.string().required('Seleccione tipo de entrega'),
+  products: yup.array().min(1, 'Agregue al menos un producto')
+});
 
 const RegisterSale = () => {
   const navigation = useNavigation();
@@ -30,11 +36,40 @@ const RegisterSale = () => {
   const [applyIVA, setApplyIVA] = useState(false);
   const [iva, setIva] = useState(0);
 
+  const [errors, setErrors] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('success');
+  const [submitted, setSubmitted] = useState(false);
+
+  const validateField = useCallback(async (field, value) => {
+    try {
+      await validationSchema.validateAt(field, { [field]: value });
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    } catch (error) {
+      setErrors(prev => ({ ...prev, [field]: error.message }));
+    }
+  }, []);
+
+  // Validar campos en tiempo real después del primer intento
+  useEffect(() => {
+    if (submitted) validateField('client', client);
+  }, [client, submitted, validateField]);
+
+  useEffect(() => {
+    if (submitted) validateField('paymentType', paymentType);
+  }, [paymentType, submitted, validateField]);
+
+  useEffect(() => {
+    if (submitted) validateField('deliveryType', deliveryType);
+  }, [deliveryType, submitted, validateField]);
+
+  useEffect(() => {
+    if (submitted) validateField('products', products);
+  }, [products, submitted, validateField]);
+
 
   useEffect(() => {
     const subTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
@@ -58,7 +93,7 @@ const RegisterSale = () => {
 
     fetchClients();
   }, []);
-  
+
   const handleConfirm = async () => {
     setShowConfirmation(false);
     setIsLoading(true);
@@ -86,7 +121,7 @@ const RegisterSale = () => {
       aplicarIVA: applyIVA,
       tipoDePago: paymentType,
       tipoDeEntrega: deliveryType,
-      idTrabajador: user?.idUsuario, 
+      idTrabajador: user?.idUsuario,
     };
 
     try {
@@ -127,6 +162,28 @@ const RegisterSale = () => {
     }
   };
 
+  // 🛑 Modificar el onPress del botón de registro
+  const handleRegisterPress = async () => {
+    setSubmitted(true);
+    try {
+      await validationSchema.validate({
+        client,
+        paymentType,
+        deliveryType,
+        products
+      }, { abortEarly: false });
+
+      setErrors({});
+      setShowConfirmation(true);
+    } catch (err) {
+      const validationErrors = {};
+      err.inner.forEach(error => {
+        validationErrors[error.path] = error.message;
+      });
+      setErrors(validationErrors);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
@@ -136,7 +193,7 @@ const RegisterSale = () => {
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={client}
-            onValueChange={(itemValue) => setClient(itemValue)}
+            onValueChange={setClient}
             style={styles.picker}
           >
             <Picker.Item label="Seleccione un cliente" value="" />
@@ -150,22 +207,27 @@ const RegisterSale = () => {
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
+        {errors.client && <Text style={styles.errorText}>{errors.client}</Text>}
 
         <Text style={styles.label}>Tipo de Pago</Text>
         <View style={styles.pickerContainer}>
-          <Picker selectedValue={paymentType} onValueChange={(itemValue) => setPaymentType(itemValue)} style={styles.picker}>
+          <Picker selectedValue={paymentType}
+            onValueChange={setPaymentType}
+            style={styles.picker}>
             <Picker.Item label="Seleccione un tipo de pago" value="" />
             <Picker.Item label="Tarjeta" value="Tarjeta" />
             <Picker.Item label="Efectivo" value="Efectivo" />
             <Picker.Item label="Transferencia" value="Transferencia" />
-            <Picker.Item label="Crédito" value="Crédito" />
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
+        {errors.paymentType && <Text style={styles.errorText}>{errors.paymentType}</Text>}
 
         <Text style={styles.label}>Tipo de Entrega</Text>
         <View style={styles.pickerContainer}>
-          <Picker selectedValue={deliveryType} onValueChange={(itemValue) => setDeliveryType(itemValue)} style={styles.picker}>
+          <Picker selectedValue={deliveryType}
+            onValueChange={setDeliveryType}
+            style={styles.picker}>
             <Picker.Item label="Seleccione el tipo de entrega" value="" />
             <Picker.Item label="Físico" value="Físico" />
             <Picker.Item label="Domicilio" value="Domicilio" />
@@ -174,6 +236,7 @@ const RegisterSale = () => {
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
+        {errors.deliveryType && <Text style={styles.errorText}>{errors.deliveryType}</Text>}
 
         <View style={styles.infoContainer}>
           <Text style={styles.label}>¿Aplicar IVA?</Text>
@@ -190,6 +253,7 @@ const RegisterSale = () => {
 
 
         <SalesList products={products} setProducts={setProducts} />
+        {errors.products && <Text style={styles.errorText}>{errors.products}</Text>}
 
         <View style={styles.totalContainer}>
           <View style={styles.rowRight}>
@@ -207,7 +271,7 @@ const RegisterSale = () => {
         </View>
 
 
-        <TouchableOpacity style={styles.registerButton} onPress={() => setShowConfirmation(true)}>
+        <TouchableOpacity style={styles.registerButton} onPress={handleRegisterPress}>
           <Text style={styles.registerButtonText}>Registrar</Text>
         </TouchableOpacity>
       </View>
@@ -328,7 +392,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#444',
   },
-  
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+    marginLeft: 15
+  },
+
 });
 
 export default RegisterSale;
