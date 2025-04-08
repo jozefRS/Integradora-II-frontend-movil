@@ -2,18 +2,20 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
+import { API_BASE_URL } from '../../utils/axiosInstance';
 
 const ProductDetail = () => {
   const route = useRoute();
   const { product } = route.params;
+  const imageUrl = product.image
+  ? `${API_BASE_URL}/images${product.image}`
+  : 'https://placehold.co/200.png';
+
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Image
-          source={product.image || { uri: 'https://placehold.co/200.png' }}
-          style={styles.image}
-        />
+      <Image source={{ uri: imageUrl }} style={styles.image} />
 
         <View style={styles.infoContainer}>
           <Text style={styles.productName}>{product.name}</Text>

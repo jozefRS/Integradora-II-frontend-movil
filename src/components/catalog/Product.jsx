@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { COLORS } from '../../styles/styles';
 import { useNavigation } from '@react-navigation/native';
+import { API_BASE_URL } from '../../utils/axiosInstance';
+
 
 const Product = ({ product }) => {
   const navigation = useNavigation();
@@ -11,13 +13,20 @@ const Product = ({ product }) => {
     return text.length > limit ? text.substring(0, limit) + '...' : text;
   };
 
+  const imageUrl = product.image
+    ? `${API_BASE_URL}/images${product.image}`
+    : 'https://via.placeholder.com/150';
+
+
   return (
     <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ProductDetail', { product })}>
-      <Image source={product.image} style={styles.image} />
+
+      <Image source={{ uri: imageUrl }} style={styles.image} />
+
       <View style={styles.infoContainer}>
         <Text style={styles.productName}>{product.name}</Text>
         <Text style={styles.productDescription}>{truncateText(product.description, 50)}</Text>
-        <View style={styles.row}> 
+        <View style={styles.row}>
           <Text style={styles.productPrice}>{product.price}</Text>
           <View style={[styles.badge, product.available ? styles.available : styles.unavailable]}>
             <Text style={styles.badgeText}>{product.available ? 'En stock' : 'Agotado'}</Text>

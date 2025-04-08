@@ -23,6 +23,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b41991c2-331a-40f9-9068-23017eb0d8dd"
+      }
+    },
+    "owner": "astvg"
   }
 }

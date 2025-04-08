@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { GLOBAL_STYLES, COLORS } from '../../styles/styles';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -13,6 +13,7 @@ import { Switch } from 'react-native';
 import { useContext } from 'react';
 import { CatalogContext } from '../../context/CatalogContext';
 import { AuthContext } from '../../context/AuthContext';
+import * as ImagePicker from 'expo-image-picker';
 import * as yup from 'yup';
 
 const validationSchema = yup.object().shape({
@@ -43,6 +44,8 @@ const RegisterSale = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('success');
   const [submitted, setSubmitted] = useState(false);
+  const [evidencia, setEvidencia] = useState(null);
+
 
   const validateField = useCallback(async (field, value) => {
     try {
@@ -97,21 +100,26 @@ const RegisterSale = () => {
   const handleConfirm = async () => {
     setShowConfirmation(false);
     setIsLoading(true);
-
-    // 1. Construimos el 'productosMap' para enviar al backend
+  
+    // Subir evidencia si existe
+    let imageUrl = null;
+    if (deliveryType === 'Domicilio' || deliveryType === 'Paquetería') {
+      imageUrl = await uploadEvidencia();
+      if (!imageUrl) {
+        setIsLoading(false);
+        return;
+      }
+    }
+  
     const productosMap = {};
     products.forEach((product) => {
       productosMap[product.id] = product.quantity;
     });
-
-    // 2. Calculamos subtotal, IVA, total
+  
     const subTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
     const iva = applyIVA ? subTotal * 0.16 : 0;
     const totalFinal = subTotal + iva;
-
-    console.log("🧪 Trabajador actual desde contexto:", user);
-
-    // 3. Armamos el objeto para la venta
+  
     const ventaData = {
       idCliente: client,
       productos: productosMap,
@@ -122,45 +130,37 @@ const RegisterSale = () => {
       tipoDePago: paymentType,
       tipoDeEntrega: deliveryType,
       idTrabajador: user?.idUsuario,
+      urlImagenEnvio: imageUrl, // ← incluimos el nombre de la imagen
     };
-
+  
     try {
-      // 4. Enviamos la venta al backend
       await axiosInstance.post('api/ventas/realizar', ventaData);
-
-      // 5. (Opcional) Actualizar stock localmente en el contexto
-      //    Creamos un array "updates" con { productId, quantitySold }
-      //    para cada producto vendido.
-      const updates = products.map((prod) => ({
+      updateStock(products.map((prod) => ({
         productId: prod.id,
         quantitySold: prod.quantity,
-      }));
-
-      // Llamamos la función que descuenta del stock
-      updateStock(updates);
-
-      // 6. Limpiamos estados
+      })));
+  
       setClient('');
       setProducts([]);
       setPaymentType('');
       setDeliveryType('');
-
-      // 7. Mostramos feedback al usuario
+      setEvidencia(null); // Limpiar imagen
+  
       setTimeout(() => {
         setIsLoading(false);
         setAlertMessage('Venta registrada exitosamente.');
         setAlertType('success');
         setAlertVisible(true);
       }, 1000);
-
+  
     } catch (error) {
-      // Manejo de error
       setIsLoading(false);
       setAlertMessage('Ocurrió un error al registrar la venta.');
       setAlertType('error');
       setAlertVisible(true);
     }
   };
+  
 
   // 🛑 Modificar el onPress del botón de registro
   const handleRegisterPress = async () => {
@@ -183,6 +183,60 @@ const RegisterSale = () => {
       setErrors(validationErrors);
     }
   };
+
+  const showAlert = (message, type = 'error') => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
+  const handleTakePhoto = async () => {
+    // Pide permisos para la cámara
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Se necesita acceso a la cámara para tomar evidencia.');
+      return;
+    }
+
+    // Abre la cámara
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.7,
+      base64: true,
+    });
+
+    // Si el usuario toma una foto y no cancela
+    if (!result.canceled) {
+      const photo = result.assets[0];
+      setEvidencia(photo); // Puedes almacenar URI o base64 según tu backend
+    }
+  };
+
+  const uploadEvidencia = async () => {
+    if (!evidencia) return null;
+
+    const formData = new FormData();
+    formData.append('image', {
+      uri: evidencia.uri,
+      name: 'evidencia.jpg',
+      type: 'image/jpeg',
+    });
+
+    try {
+      const res = await axiosInstance.post('/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return res.data.imageUrl; // devuelve solo el nombre del archivo
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      showAlert('Error al subir la imagen de evidencia');
+      return null;
+    }
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -229,13 +283,42 @@ const RegisterSale = () => {
             onValueChange={setDeliveryType}
             style={styles.picker}>
             <Picker.Item label="Seleccione el tipo de entrega" value="" />
-            <Picker.Item label="Físico" value="Físico" />
+            <Picker.Item label="Físico (Recoger en tienda)" value="Físico" />
             <Picker.Item label="Domicilio" value="Domicilio" />
-            <Picker.Item label="Recoger en tienda" value="Recoger en tienda" />
-            <Picker.Item label="Envío" value="Envío" />
+            <Picker.Item label="Paquetería" value="Paquetería" />
           </Picker>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
+        {(deliveryType === 'Domicilio' || deliveryType === 'Paquetería') && (
+          <>
+            <TouchableOpacity
+              style={{
+                backgroundColor: COLORS.primary,
+                padding: 12,
+                borderRadius: 10,
+                alignItems: 'center',
+                marginBottom: 15,
+              }}
+              onPress={handleTakePhoto}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>Adjuntar evidencia</Text>
+            </TouchableOpacity>
+
+            {evidencia && (
+              <View style={{ alignItems: 'center', marginBottom: 15 }}>
+                <Image
+                  source={{ uri: evidencia.uri }}
+                  style={{ width: 150, height: 150, borderRadius: 10 }}
+                />
+                <Text style={{ fontSize: 12, marginTop: 5, color: '#6C2373' }}>
+                  Evidencia adjuntada
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+
+
         {errors.deliveryType && <Text style={styles.errorText}>{errors.deliveryType}</Text>}
 
         <View style={styles.infoContainer}>
@@ -252,8 +335,13 @@ const RegisterSale = () => {
         </Text>
 
 
-        <SalesList products={products} setProducts={setProducts} />
-        {errors.products && <Text style={styles.errorText}>{errors.products}</Text>}
+        <SalesList products={products} setProducts={setProducts} showAlert={showAlert} />
+        {errors.products && (
+          <Text style={{ marginTop: 20, fontSize: 12, color: 'red', marginLeft: 15 }}>
+            {errors.products}
+          </Text>
+        )}
+
 
         <View style={styles.totalContainer}>
           <View style={styles.rowRight}>
@@ -287,8 +375,7 @@ const RegisterSale = () => {
         isVisible={alertVisible}
         type={alertType}
         message={alertMessage}
-        redirectTo="Sales"
-        onClose={() => setAlertVisible(false)}
+        onClose={() => setAlertVisible(false)} // Solo cerrar
       />
 
       <LoadingModal isLoading={isLoading} message="Registrando venta..." />

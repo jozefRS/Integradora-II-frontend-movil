@@ -31,7 +31,7 @@ export const CatalogProvider = ({ children }) => {
           id: p.id,
           name: p.nombre,
           price: `$${p.precio}`,
-          image: p.imagen ? { uri: p.imagen } : { uri: 'https://placehold.co/200.png' },
+          image: p.imagen || null, // solo string, no objeto
           description: p.descripcion || 'Sin descripción',
           available: p.stock > 0,
           stock: p.stock,

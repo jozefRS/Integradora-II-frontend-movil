@@ -2,10 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axiosInstance from '../../utils/axiosInstance'; // Usamos axiosInstance para hacer las solicitudes
+import ConfirmationModal from '../status/ConfirmationModal'; // Modal de confirmación para eliminar productos
 
-const SalesList = ({ products, setProducts }) => {
+const SalesList = ({ products, setProducts, showAlert }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [availableProducts, setAvailableProducts] = useState([]); // Lista de productos de la base de datos
+  const [selectedToDelete, setSelectedToDelete] = useState(null);
+
+  const confirmDelete = (product) => {
+    setSelectedToDelete(product);
+  };
+
+  const deleteProduct = () => {
+    if (selectedToDelete) {
+      setProducts(prev => prev.filter(p => p.id !== selectedToDelete.id));
+      setSelectedToDelete(null);
+    }
+  };
+
 
   useEffect(() => {
     fetchProducts(); // Al montar el componente, obtenemos los productos
@@ -24,13 +38,13 @@ const SalesList = ({ products, setProducts }) => {
   const addProductToList = (product) => {
     setProducts((prevProducts) => {
       const existingProduct = prevProducts.find((p) => p.id === product.id);
-  
+
       if (existingProduct) {
         return prevProducts.map((p) =>
           p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
         );
       }
-  
+
       return [
         ...prevProducts,
         {
@@ -38,24 +52,38 @@ const SalesList = ({ products, setProducts }) => {
           name: product.nombre,
           price: parseFloat(product.precio), // 💰 aseguramos número
           details: product.descripcion || '', // 📄 info adicional opcional
-          quantity: 1
+          quantity: 1,
+          stock: product.stock
         }
       ];
     });
-  
+
     setModalVisible(false);
   };
-  
+
 
   const updateQuantity = (id, type) => {
     setProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === id
-          ? { ...product, quantity: type === 'increase' ? product.quantity + 1 : Math.max(0, product.quantity - 1) }
-          : product
-      )
+      prevProducts.map((product) => {
+        if (product.id !== id) return product;
+  
+        if (type === 'increase') {
+          if (product.quantity < product.stock) {
+            return { ...product, quantity: product.quantity + 1 };
+          } else {
+            showAlert(`Solo hay ${product.stock} unidades disponibles en inventario.`, 'error');
+            return product;
+          }
+        } else {
+          return {
+            ...product,
+            quantity: Math.max(1, product.quantity - 1),
+          };
+        }
+      })
     );
-  };
+  };  
+
 
   return (
     <View style={styles.container}>
@@ -80,6 +108,9 @@ const SalesList = ({ products, setProducts }) => {
             nestedScrollEnabled={true}
             renderItem={({ item }) => (
               <View style={styles.productRow}>
+                <TouchableOpacity onPress={() => confirmDelete(item)}>
+                  <Icon name="trash-outline" size={20} color="red" style={{ marginBottom: 20 }} />
+                </TouchableOpacity>
                 <View style={styles.productInfo}>
                   {/* <View style={styles.productImage} /> */}
                   <View style={styles.productTextContainer}>
@@ -129,6 +160,15 @@ const SalesList = ({ products, setProducts }) => {
           </View>
         </View>
       </Modal>
+      {selectedToDelete && (
+        <ConfirmationModal
+          isVisible={!!selectedToDelete}
+          message={`¿Deseas eliminar "${selectedToDelete.name}" de la venta?`}
+          onConfirm={deleteProduct}
+          onCancel={() => setSelectedToDelete(null)}
+        />
+      )}
+
     </View>
   );
 };

@@ -2,11 +2,15 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://192.168.110.74:8080', // ✅ SIN /api para permitir rutas como /auth/login
+   // ✅ SIN /api para permitir rutas como /auth/login
+  baseURL: 'http://192.168.107.205:8080',
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+//para casos muy específicos, como el de la imagen
+export const API_BASE_URL = 'http://192.168.107.205:8080';
 
 // Agrega el token automáticamente si está disponible
 axiosInstance.interceptors.request.use(

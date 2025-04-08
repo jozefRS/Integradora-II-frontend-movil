@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, Image } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { FAB } from 'react-native-paper'; // Para el botón flotante
+import { API_BASE_URL } from '../../utils/axiosInstance';
+
 
 const SaleDetailEnhanced = () => {
   const route = useRoute();
@@ -49,73 +51,95 @@ const SaleDetailEnhanced = () => {
       setIsGenerating(true);
 
       // 1. Crear HTML para el PDF
+      const imageUrl = sale.urlImagenEnvio
+        ? `${API_BASE_URL}/images/${sale.urlImagenEnvio}`
+        : null;
+
       const html = `
-        <html>
-          <head>
-            <style>
-              body { font-family: Arial; padding: 20px; }
-              h1 { color: ${COLORS.primary}; text-align: center; }
-              .header { margin-bottom: 20px; }
-              .section { margin-bottom: 15px; }
-              .badge { 
-                padding: 5px 10px; 
-                border-radius: 15px; 
-                color: white; 
-                display: inline-block;
-                background-color: ${getPaymentColor(sale.tipoDePago)};
-              }
-              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; }
-            </style>
-          </head>
-          <body>
-            <h1>Detalles de Venta</h1>
-            
-            <div class="header">
-              <p><strong>Fecha:</strong> ${formattedDate}</p>
-              <p><strong>Cliente:</strong> ${sale.clientName}</p>
-            </div>
-  
-            <div class="section">
-              <p><strong>Tipo de pago:</strong> 
-                <span class="badge">${sale.tipoDePago}</span>
-              </p>
-              <p><strong>Tipo de entrega:</strong> 
-                <span class="badge" style="background-color: ${getDeliveryColor(sale.tipoDeEntrega)};">
-                  ${sale.tipoDeEntrega}
-                </span>
-              </p>
-            </div>
-  
-            <div class="section">
-              <h3>Productos (${sale.products.length})</h3>
-              <table>
-                <tr>
-                  <th>Producto</th>
-                  <th>Precio</th>
-                  <th>Cantidad</th>
-                  <th>Total</th>
-                </tr>
-                ${sale.products.map(product => `
-                  <tr>
-                    <td>${product.name}</td>
-                    <td>$${product.price}</td>
-                    <td>${product.quantity}</td>
-                    <td>$${product.total}</td>
-                  </tr>
-                `).join('')}
-              </table>
-            </div>
-  
-            <div class="section">
-              <h3>Total: $${parseFloat(sale.total).toFixed(2)}</h3>
-              <p>IVA aplicado: ${sale.aplicarIVA ? 'Sí (16%)' : 'No'}</p>
-              <p>Estado: ${sale.estado ? 'Activa' : 'Inactiva'}</p>
-            </div>
-          </body>
-        </html>
-      `;
+  <html>
+    <head>
+      <style>
+        body { font-family: Arial; padding: 20px; }
+        h1 { color: ${COLORS.primary}; text-align: center; }
+        .header { margin-bottom: 20px; }
+        .section { margin-bottom: 15px; }
+        .badge { 
+          padding: 5px 10px; 
+          border-radius: 15px; 
+          color: white; 
+          display: inline-block;
+          background-color: ${getPaymentColor(sale.tipoDePago)};
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .evidence-container {
+          text-align: center;
+          margin-top: 30px;
+        }
+        .evidence-image {
+          width: 250px;
+          height: auto;
+          border-radius: 10px;
+          border: 1px solid #ccc;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Detalles de Venta</h1>
+      
+      <div class="header">
+        <p><strong>Fecha:</strong> ${formattedDate}</p>
+        <p><strong>Cliente:</strong> ${sale.clientName}</p>
+      </div>
+
+      <div class="section">
+        <p><strong>Tipo de pago:</strong> 
+          <span class="badge">${sale.tipoDePago}</span>
+        </p>
+        <p><strong>Tipo de entrega:</strong> 
+          <span class="badge" style="background-color: ${getDeliveryColor(sale.tipoDeEntrega)};">
+            ${sale.tipoDeEntrega}
+          </span>
+        </p>
+      </div>
+
+      <div class="section">
+        <h3>Productos (${sale.products.length})</h3>
+        <table>
+          <tr>
+            <th>Producto</th>
+            <th>Precio</th>
+            <th>Cantidad</th>
+            <th>Total</th>
+          </tr>
+          ${sale.products.map(product => `
+            <tr>
+              <td>${product.name}</td>
+              <td>$${product.price}</td>
+              <td>${product.quantity}</td>
+              <td>$${product.total}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+
+      <div class="section">
+        <h3>Total: $${parseFloat(sale.total).toFixed(2)}</h3>
+        <p>IVA aplicado: ${sale.aplicarIVA ? 'Sí (16%)' : 'No'}</p>
+        <p>Estado: ${sale.estado ? 'Activa' : 'Inactiva'}</p>
+      </div>
+
+      ${imageUrl ? `
+        <div class="evidence-container">
+          <h3>Evidencia de Envío</h3>
+          <img src="${imageUrl}" alt="Evidencia" class="evidence-image" />
+        </div>
+      ` : ''}
+    </body>
+  </html>
+`;
+
 
       // 2. Generar archivo PDF
       const { uri } = await Print.printToFileAsync({ html });
@@ -222,6 +246,20 @@ const SaleDetailEnhanced = () => {
           </View>
         )}
       />
+      {sale.urlImagenEnvio && (
+        <View style={{ marginVertical: 20, alignItems: 'center' }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10, color: COLORS.primary }}>
+            Evidencia de envío
+          </Text>
+          <Image
+            source={{ uri: `${API_BASE_URL}/images/${sale.urlImagenEnvio}` }}
+            style={{ width: 250, height: 250, borderRadius: 10 }}
+            resizeMode="cover"
+          />
+
+        </View>
+      )}
+
       <FAB
         style={styles.fab}
         icon="file-pdf-box"
@@ -232,6 +270,7 @@ const SaleDetailEnhanced = () => {
         visible={!tooltip.visible}
       />
     </View>
+
   );
 };
 
