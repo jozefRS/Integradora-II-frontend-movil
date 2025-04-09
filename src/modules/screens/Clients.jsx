@@ -85,15 +85,15 @@ const ClientWithDeactivate = () => {
               <Text style={styles.cell}>{item.correo}</Text>
               <Text style={styles.cell}>{item.telefono[0]}</Text>
               <View style={styles.actions}>
-                <TouchableOpacity onPress={() => navigation.navigate("EditClient", { client: item })}>
+                {/* <TouchableOpacity onPress={() => navigation.navigate("EditClient", { client: item })}>
                   <Icon name="pencil-outline" size={20} color={COLORS.black} />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity onPress={() => navigation.navigate("ClientDetail", { client: item })}>
                   <Icon name="eye-outline" size={20} color={COLORS.black} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => showConfirmationModal(item.id)}>
+                {/* <TouchableOpacity onPress={() => showConfirmationModal(item.id)}>
                   <Icon name="trash-outline" size={20} color={COLORS.darkGray} />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </View>
           )}
