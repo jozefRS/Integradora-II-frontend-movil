@@ -9,7 +9,7 @@ const CatalogSearchBar = ({ search, setSearch }) => {
       <Icon name="search-outline" size={20} color={COLORS.darkGray} style={styles.icon} />
       <TextInput
         style={styles.input}
-        placeholder="Buscar por nombre o categoría"
+        placeholder="Buscar por nombre"
         placeholderTextColor={COLORS.darkGray}
         value={search}
         onChangeText={setSearch}

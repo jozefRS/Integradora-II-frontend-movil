@@ -15,6 +15,10 @@ import { CatalogContext } from '../../context/CatalogContext';
 import { AuthContext } from '../../context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as yup from 'yup';
+import ClientSelectorModal from '../client/ClientSelectorModal';
+import PaymentTypeSelectorModal from '../client/PaymentTypeSelectorModal';
+import DeliveryTypeSelectorModal from '../client/DeliveryTypeSelectorModal';
+import { SalesContext } from '../../context/SalesContext';
 
 const validationSchema = yup.object().shape({
   client: yup.string().required('Seleccione un cliente'),
@@ -24,6 +28,8 @@ const validationSchema = yup.object().shape({
 });
 
 const RegisterSale = () => {
+  const { addSale } = useContext(SalesContext);
+
   const navigation = useNavigation();
   const { updateStock } = useContext(CatalogContext);
   const { user } = useContext(AuthContext); // <-- ✅ obtenemos el id del trabajador
@@ -45,6 +51,13 @@ const RegisterSale = () => {
   const [alertType, setAlertType] = useState('success');
   const [submitted, setSubmitted] = useState(false);
   const [evidencia, setEvidencia] = useState(null);
+
+  const [clientModalVisible, setClientModalVisible] = useState(false);
+  const [clientName, setClientName] = useState('');
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+
+
 
 
   const validateField = useCallback(async (field, value) => {
@@ -100,7 +113,7 @@ const RegisterSale = () => {
   const handleConfirm = async () => {
     setShowConfirmation(false);
     setIsLoading(true);
-  
+
     // Subir evidencia si existe
     let imageUrl = null;
     if (deliveryType === 'Domicilio' || deliveryType === 'Paquetería') {
@@ -110,16 +123,16 @@ const RegisterSale = () => {
         return;
       }
     }
-  
+
     const productosMap = {};
     products.forEach((product) => {
       productosMap[product.id] = product.quantity;
     });
-  
+
     const subTotal = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
     const iva = applyIVA ? subTotal * 0.16 : 0;
     const totalFinal = subTotal + iva;
-  
+
     const ventaData = {
       idCliente: client,
       productos: productosMap,
@@ -132,32 +145,43 @@ const RegisterSale = () => {
       idTrabajador: user?.idUsuario,
       urlImagenEnvio: imageUrl, // ← incluimos el nombre de la imagen
     };
-  
+
     try {
       await axiosInstance.post('api/ventas/realizar', ventaData);
       updateStock(products.map((prod) => ({
         productId: prod.id,
         quantitySold: prod.quantity,
       })));
-  
+
       setClient('');
       setProducts([]);
       setPaymentType('');
       setDeliveryType('');
       setEvidencia(null); // Limpiar imagen
-  
+      addSale(ventaData); // Para actualizar la lista sin recargar
+
       setTimeout(() => {
         setIsLoading(false);
         setAlertMessage('Venta registrada exitosamente.');
         setAlertType('success');
         setAlertVisible(true);
       }, 1000);
-  
+      navigation.navigate('Sales'); // ajusta el nombre de la ruta si es distinto
+
+
     } catch (error) {
       setIsLoading(false);
       setAlertMessage('Ocurrió un error al registrar la venta.');
       setAlertType('error');
       setAlertVisible(true);
+    }
+  };
+
+  const handleCloseAlert = () => {
+    setAlertVisible(false);
+    if (alertType === 'success') {
+      console.log("🧾 Sale enviada al detalle:", sale);
+      navigation.navigate('Sales'); // solo si fue exitosa
     }
   };
   
@@ -245,50 +269,45 @@ const RegisterSale = () => {
 
         <Text style={styles.label}>Cliente</Text>
         <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={client}
-            onValueChange={setClient}
-            style={styles.picker}
+          <TouchableOpacity
+            style={{ flex: 1, height: 50, justifyContent: 'center' }}
+            onPress={() => setClientModalVisible(true)}
           >
-            <Picker.Item label="Seleccione un cliente" value="" />
-            {clients.map((cli) => (
-              <Picker.Item
-                key={cli.id}
-                label={`${cli.nombre} ${cli.apellidoPaterno} ${cli.apellidoMaterno || ''}`.trim()}
-                value={cli.id}
-              />
-            ))}
-          </Picker>
+            <Text style={[styles.pickerText, { color: paymentType ? '#000' : '#999' }]}>
+              {clientName || 'Seleccione un cliente'}
+            </Text>
+          </TouchableOpacity>
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
         </View>
         {errors.client && <Text style={styles.errorText}>{errors.client}</Text>}
 
+
         <Text style={styles.label}>Tipo de Pago</Text>
-        <View style={styles.pickerContainer}>
-          <Picker selectedValue={paymentType}
-            onValueChange={setPaymentType}
-            style={styles.picker}>
-            <Picker.Item label="Seleccione un tipo de pago" value="" />
-            <Picker.Item label="Tarjeta" value="Tarjeta" />
-            <Picker.Item label="Efectivo" value="Efectivo" />
-            <Picker.Item label="Transferencia" value="Transferencia" />
-          </Picker>
+        <TouchableOpacity
+          onPress={() => setPaymentModalVisible(true)}
+          style={styles.pickerContainer}
+        >
+          <Text style={[styles.pickerText, { color: paymentType ? '#000' : '#999' }]}>
+            {paymentType || 'Seleccione tipo de pago'}
+          </Text>
+
           <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
-        </View>
+        </TouchableOpacity>
         {errors.paymentType && <Text style={styles.errorText}>{errors.paymentType}</Text>}
 
+
         <Text style={styles.label}>Tipo de Entrega</Text>
-        <View style={styles.pickerContainer}>
-          <Picker selectedValue={deliveryType}
-            onValueChange={setDeliveryType}
-            style={styles.picker}>
-            <Picker.Item label="Seleccione el tipo de entrega" value="" />
-            <Picker.Item label="Físico (Recoger en tienda)" value="Físico" />
-            <Picker.Item label="Domicilio" value="Domicilio" />
-            <Picker.Item label="Paquetería" value="Paquetería" />
-          </Picker>
-          <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
-        </View>
+<TouchableOpacity
+  onPress={() => setDeliveryModalVisible(true)}
+  style={styles.pickerContainer}
+>
+  <Text style={[styles.pickerText, { color: deliveryType ? '#000' : '#999' }]}>
+    {deliveryType || 'Seleccione el tipo de entrega'}
+  </Text>
+  <Icon name="chevron-down-outline" size={20} color="#6C2373" style={styles.pickerIcon} />
+</TouchableOpacity>
+{errors.deliveryType && <Text style={styles.errorText}>{errors.deliveryType}</Text>}
+
         {(deliveryType === 'Domicilio' || deliveryType === 'Paquetería') && (
           <>
             <TouchableOpacity
@@ -371,12 +390,41 @@ const RegisterSale = () => {
         onCancel={() => setShowConfirmation(false)}
       />
 
-      <AlertModal
-        isVisible={alertVisible}
-        type={alertType}
-        message={alertMessage}
-        onClose={() => setAlertVisible(false)} // Solo cerrar
+<AlertModal
+  isVisible={alertVisible}
+  type={alertType}
+  message={alertMessage}
+  onClose={handleCloseAlert}
+/>
+
+
+      <ClientSelectorModal
+        visible={clientModalVisible}
+        onClose={() => setClientModalVisible(false)}
+        onSelectClient={(selected) => {
+          setClient(selected.id);
+          setClientName(`${selected.nombre} ${selected.apellidoPaterno} ${selected.apellidoMaterno}`);
+        }}
       />
+
+      <PaymentTypeSelectorModal
+        visible={paymentModalVisible}
+        onSelect={(option) => {
+          setPaymentType(option);
+          setPaymentModalVisible(false);
+        }}
+        onClose={() => setPaymentModalVisible(false)}
+      />
+
+<DeliveryTypeSelectorModal
+  visible={deliveryModalVisible}
+  onSelect={(option) => {
+    setDeliveryType(option);
+    setDeliveryModalVisible(false);
+  }}
+  onClose={() => setDeliveryModalVisible(false)}
+/>
+
 
       <LoadingModal isLoading={isLoading} message="Registrando venta..." />
     </ScrollView>
@@ -486,6 +534,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginLeft: 15
   },
+  pickerText: {
+    flex: 1,
+    height: 50,
+    lineHeight: 50, // <-- centra verticalmente
+    paddingLeft: 10,
+    fontSize: 16,
+  },
+
 
 });
 

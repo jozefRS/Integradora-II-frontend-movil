@@ -8,6 +8,7 @@ import StatusBar from "../../components/status/StatusBar";
 import AlertModal from '../../components/status/AlertModal';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { SalesContext } from '../../context/SalesContext';
 
 const Sales = () => {
   const navigation = useNavigation();
@@ -17,6 +18,8 @@ const Sales = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('error');
   const { user } = useContext(AuthContext); // obtenemos idUsuario
+  const { sales, fetchSales } = useContext(SalesContext);
+
 
 
   useEffect(() => {
@@ -32,7 +35,8 @@ const Sales = () => {
         axiosInstance.get('api/producto'),
       ]);
   
-      const sales = salesRes.data || []; // ← sin .body si tu backend responde directo con lista
+      const sales = salesRes.data?.body?.data || salesRes.data || [];
+
       const clients = clientsRes.data.body?.data || [];
       const products = productsRes.data.body?.data || [];
   

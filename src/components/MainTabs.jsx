@@ -11,7 +11,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 // Vistas de ventas
 import SalesTableScreen from '../modules/screens/Sales';
 import RegisterSale from './sales/RegisterSale';
-import SalesDetailScreen from './sales/SaleDetail';
+import SalesDetailScreen from './sales/SalesDetailScreen';
+
 
 // Vistas de cliente
 import Client from '../modules/screens/Clients';

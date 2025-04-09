@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axiosInstance from '../../utils/axiosInstance'; // Usamos axiosInstance para hacer las solicitudes
 import ConfirmationModal from '../status/ConfirmationModal'; // Modal de confirmación para eliminar productos
+import CatalogSearchBar from '../catalog/CatalogSearchbar';
 
 const SalesList = ({ products, setProducts, showAlert }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [availableProducts, setAvailableProducts] = useState([]); // Lista de productos de la base de datos
   const [selectedToDelete, setSelectedToDelete] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [search, setSearch] = useState('');
+
 
   const confirmDelete = (product) => {
     setSelectedToDelete(product);
@@ -27,13 +31,31 @@ const SalesList = ({ products, setProducts, showAlert }) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axiosInstance.get('api/producto'); // Obtenemos los productos desde la base de datos
-      const filteredProducts = response.data.body?.data.filter(product => product.estado === true) || []; // Filtramos los productos con estado true
-      setAvailableProducts(filteredProducts); // Guardamos los productos en el estado
+      const [productRes, categoryRes] = await Promise.all([
+        axiosInstance.get('api/producto'),
+        axiosInstance.get('api/categoria')
+      ]);
+
+      const productos = productRes.data.body?.data || [];
+      const categorias = categoryRes.data.body?.data || [];
+
+      const productosTransformados = productos
+        .filter(p => p.estado)
+        .map((p) => {
+          const categoria = categorias.find(c => c.id === p.idCategoria);
+          return {
+            ...p,
+            categoria: categoria ? categoria.nombre : 'Sin categoría'
+          };
+        });
+
+      setAvailableProducts(productosTransformados);
+      setCategories(categorias); // Por si luego se necesitan
     } catch (error) {
       console.error('Error al obtener los productos:', error);
     }
   };
+
 
   const addProductToList = (product) => {
     setProducts((prevProducts) => {
@@ -66,7 +88,7 @@ const SalesList = ({ products, setProducts, showAlert }) => {
     setProducts((prevProducts) =>
       prevProducts.map((product) => {
         if (product.id !== id) return product;
-  
+
         if (type === 'increase') {
           if (product.quantity < product.stock) {
             return { ...product, quantity: product.quantity + 1 };
@@ -82,7 +104,13 @@ const SalesList = ({ products, setProducts, showAlert }) => {
         }
       })
     );
-  };  
+  };
+
+  const filteredProducts = availableProducts.filter(product =>
+    product.nombre.toLowerCase().includes(search.toLowerCase()) ||
+    (product.categoria?.toLowerCase().includes(search.toLowerCase()))
+  );
+
 
 
   return (
@@ -96,6 +124,8 @@ const SalesList = ({ products, setProducts, showAlert }) => {
         <Text style={styles.headerText}>Precio por unidad</Text>
         <Text style={styles.headerText}>Cantidad</Text>
       </View>
+
+
 
       {/* Lista de productos seleccionados */}
       <View style={{ height: 250 }}>
@@ -139,21 +169,26 @@ const SalesList = ({ products, setProducts, showAlert }) => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Seleccionar Producto</Text>
+            <CatalogSearchBar search={search} setSearch={setSearch} />
             {availableProducts.length === 0 ? (
               <Text style={styles.emptyText}>No hay productos disponibles</Text>
             ) : (
-              availableProducts.map((product) => (
-                <TouchableOpacity
-                  key={product.id}
-                  style={styles.modalItem}
-                  onPress={() => addProductToList(product)}
-                >
-                  <Text style={styles.modalText}>
-                    {product.nombre} - ${product.precio} {/* Mostrar nombre y precio */}
-                  </Text>
-                </TouchableOpacity>
-              ))
+              <ScrollView style={{ maxHeight: 300 }}>
+                {filteredProducts.map((product) => (
+                  <TouchableOpacity
+                    key={product.id}
+                    style={styles.modalItem}
+                    onPress={() => addProductToList(product)}
+                  >
+                    <Text style={styles.modalText}>
+                      {product.nombre} - ${product.precio}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             )}
+
+
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>

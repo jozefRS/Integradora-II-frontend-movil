@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, Image, ScrollView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { COLORS, GLOBAL_STYLES } from '../../styles/styles';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -9,9 +9,11 @@ import { FAB } from 'react-native-paper'; // Para el botón flotante
 import { API_BASE_URL } from '../../utils/axiosInstance';
 
 
-const SaleDetailEnhanced = () => {
+const SalesDetailScreen = () => {
+
   const route = useRoute();
   const { sale } = route.params;
+  console.log("📦 Detalles de venta recibidos:", sale);
   const [tooltip, setTooltip] = useState({ visible: false, message: '' });
   const [isGenerating, setIsGenerating] = useState(false);
   const formattedDate = new Date(sale.fechaDeVenta).toLocaleString('es-MX', {
@@ -160,106 +162,105 @@ const SaleDetailEnhanced = () => {
   };
 
   return (
+
     <View style={styles.container}>
-      <Text style={styles.title}>Detalles de la Venta</Text>
-      <View style={GLOBAL_STYLES.line} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+        <Text style={styles.title}>Detalles de la Venta</Text>
+        <View style={GLOBAL_STYLES.line} />
 
-      <View style={styles.cardDate}>
-        <Icon name="calendar-outline" size={20} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.dateText}>{formattedDate}</Text>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Icon name="person-outline" size={18} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.label}>Cliente:</Text>
-        <Text style={styles.value}>{sale.clientName}</Text>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Icon name="card-outline" size={18} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.label}>Tipo de Pago:</Text>
-        <View style={[GLOBAL_STYLES.badge, { backgroundColor: getPaymentColor(sale.tipoDePago) }]}>
-          <Text style={styles.badgeText}>{sale.tipoDePago}</Text>
+        <View style={styles.cardDate}>
+          <Icon name="calendar-outline" size={20} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
-      </View>
 
-      <View style={styles.infoContainer}>
-        <Icon name="cube-outline" size={18} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.label}>Tipo de Entrega:</Text>
-        <View style={[GLOBAL_STYLES.badge, { backgroundColor: getDeliveryColor(sale.tipoDeEntrega) }]}>
-          <Text style={styles.badgeText}>{sale.tipoDeEntrega}</Text>
+        <View style={styles.infoContainer}>
+          <Icon name="person-outline" size={18} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.label}>Cliente:</Text>
+          <Text style={styles.value}>{sale.clientName}</Text>
         </View>
-        <TouchableOpacity onPress={() => showTooltip('Forma en que el cliente recibe su pedido.')}>
-          <Icon name="information-circle-outline" size={18} color={COLORS.primary} style={GLOBAL_STYLES.tooltipIcon} />
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.infoContainer}>
-        <Icon name="pricetag-outline" size={18} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.label}>Total:</Text>
-        <Text style={styles.value}>${parseFloat(sale.total).toFixed(2)}</Text>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Icon name="cash-outline" size={18} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.label}>¿Aplica IVA?</Text>
-        <Text style={styles.value}>{sale.aplicarIVA ? 'Sí' : 'No'}</Text>
-        <TouchableOpacity onPress={() => showTooltip('Si está activo, se calculará 16% de IVA.')}>
-          <Icon name="information-circle-outline" size={18} color={COLORS.primary} style={GLOBAL_STYLES.tooltipIcon} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Icon name="alert-circle-outline" size={18} color={COLORS.primary} style={styles.icon} />
-        <Text style={styles.label}>Estado:</Text>
-        <View style={[GLOBAL_STYLES.badge, { backgroundColor: sale.estado ? COLORS.green : COLORS.red }]}>
-          <Text style={styles.badgeText}>{sale.estado ? 'Activa' : 'Inactiva'}</Text>
+        <View style={styles.infoContainer}>
+          <Icon name="card-outline" size={18} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.label}>Tipo de Pago:</Text>
+          <View style={[GLOBAL_STYLES.badge, { backgroundColor: getPaymentColor(sale.tipoDePago) }]}>
+            <Text style={styles.badgeText}>{sale.tipoDePago}</Text>
+          </View>
         </View>
-        <TouchableOpacity onPress={() => showTooltip('La venta puede estar activa o inactiva según su proceso.')}>
-          <Icon name="information-circle-outline" size={18} color={COLORS.primary} style={GLOBAL_STYLES.tooltipIcon} />
-        </TouchableOpacity>
-      </View>
 
-      {tooltip.visible && (
-        <View style={tooltipBox.tooltipContainer}>
-          <Text style={GLOBAL_STYLES.tooltipText}>{tooltip.message}</Text>
+        <View style={styles.infoContainer}>
+          <Icon name="cube-outline" size={18} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.label}>Tipo de Entrega:</Text>
+          <View style={[GLOBAL_STYLES.badge, { backgroundColor: getDeliveryColor(sale.tipoDeEntrega) }]}>
+            <Text style={styles.badgeText}>{sale.tipoDeEntrega}</Text>
+          </View>
+          <TouchableOpacity onPress={() => showTooltip('Forma en que el cliente recibe su pedido.')}>
+            <Icon name="information-circle-outline" size={18} color={COLORS.primary} style={GLOBAL_STYLES.tooltipIcon} />
+          </TouchableOpacity>
         </View>
-      )}
 
-      <View style={GLOBAL_STYLES.line} />
-      <Text style={styles.subTitle}>Productos en esta venta</Text>
-      <View style={styles.headerRow}>
-        <Text style={styles.headerText}>Producto</Text>
-        <Text style={styles.headerText}>Precio Unidad</Text>
-        <Text style={styles.headerText}>Cantidad</Text>
-        <Text style={styles.headerText}>Total</Text>
-      </View>
-      <FlatList
-        data={sale.products}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.row}>
+        <View style={styles.infoContainer}>
+          <Icon name="pricetag-outline" size={18} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.label}>Total:</Text>
+          <Text style={styles.value}>${parseFloat(sale.total).toFixed(2)}</Text>
+        </View>
+
+        <View style={styles.infoContainer}>
+          <Icon name="cash-outline" size={18} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.label}>¿Aplica IVA?</Text>
+          <Text style={styles.value}>{sale.aplicarIVA ? 'Sí' : 'No'}</Text>
+          <TouchableOpacity onPress={() => showTooltip('Si está activo, se calculará 16% de IVA.')}>
+            <Icon name="information-circle-outline" size={18} color={COLORS.primary} style={GLOBAL_STYLES.tooltipIcon} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoContainer}>
+          <Icon name="alert-circle-outline" size={18} color={COLORS.primary} style={styles.icon} />
+          <Text style={styles.label}>Estado:</Text>
+          <View style={[GLOBAL_STYLES.badge, { backgroundColor: sale.estado ? COLORS.green : COLORS.red }]}>
+            <Text style={styles.badgeText}>{sale.estado ? 'Activa' : 'Inactiva'}</Text>
+          </View>
+          <TouchableOpacity onPress={() => showTooltip('La venta puede estar activa o inactiva según su proceso.')}>
+            <Icon name="information-circle-outline" size={18} color={COLORS.primary} style={GLOBAL_STYLES.tooltipIcon} />
+          </TouchableOpacity>
+        </View>
+
+        {tooltip.visible && (
+          <View style={tooltipBox.tooltipContainer}>
+            <Text style={GLOBAL_STYLES.tooltipText}>{tooltip.message}</Text>
+          </View>
+        )}
+
+        <View style={GLOBAL_STYLES.line} />
+        <Text style={styles.subTitle}>Productos en esta venta</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerText}>Producto</Text>
+          <Text style={styles.headerText}>Precio Unidad</Text>
+          <Text style={styles.headerText}>Cantidad</Text>
+          <Text style={styles.headerText}>Total</Text>
+        </View>
+        {sale.products.map((item) => (
+          <View key={item.id} style={styles.row}>
             <Text style={styles.cell}>{item.name}</Text>
             <Text style={styles.cell}>{item.price}</Text>
             <Text style={styles.cell}>{item.quantity}</Text>
             <Text style={styles.cell}>{item.total}</Text>
           </View>
+        ))}
+
+        {sale.urlImagenEnvio && (
+          <View style={{ marginVertical: 20, alignItems: 'center' }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10, color: COLORS.primary }}>
+              Evidencia de envío
+            </Text>
+            <Image
+              source={{ uri: `${API_BASE_URL}/images/${sale.urlImagenEnvio}` }}
+              style={{ width: 250, height: 250, borderRadius: 10 }}
+              resizeMode="cover"
+            />
+          </View>
         )}
-      />
-      {sale.urlImagenEnvio && (
-        <View style={{ marginVertical: 20, alignItems: 'center' }}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10, color: COLORS.primary }}>
-            Evidencia de envío
-          </Text>
-          <Image
-            source={{ uri: `${API_BASE_URL}/images/${sale.urlImagenEnvio}` }}
-            style={{ width: 250, height: 250, borderRadius: 10 }}
-            resizeMode="cover"
-          />
 
-        </View>
-      )}
-
+      </ScrollView>
       <FAB
         style={styles.fab}
         icon="file-pdf-box"
@@ -380,4 +381,4 @@ const tooltipBox = StyleSheet.create({
   },
 });
 
-export default SaleDetailEnhanced;
+export default SalesDetailScreen;
