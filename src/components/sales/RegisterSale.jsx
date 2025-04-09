@@ -166,8 +166,7 @@ const RegisterSale = () => {
         setAlertType('success');
         setAlertVisible(true);
       }, 1000);
-      navigation.navigate('Sales'); // ajusta el nombre de la ruta si es distinto
-
+      // navigation.navigate('Sales'); 
 
     } catch (error) {
       setIsLoading(false);
@@ -180,7 +179,7 @@ const RegisterSale = () => {
   const handleCloseAlert = () => {
     setAlertVisible(false);
     if (alertType === 'success') {
-      console.log("🧾 Sale enviada al detalle:", sale);
+      // console.log("🧾 Sale enviada al detalle:", sale);
       navigation.navigate('Sales'); // solo si fue exitosa
     }
   };
